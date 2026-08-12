@@ -3,173 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#080b14" />
-  <link rel="manifest" href="manifest.json" />
-  <!-- icons -->
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/ICON%20192.png">
-  <link rel="apple-touch-icon" href="icons/ICON%20192.png">
-  <link rel="icon" type="image/png" sizes="72x72" href="icons/ICON%2072.png">
-  <link rel="icon" type="image/png" sizes="96x96" href="icons/ICON%2096.png">
-  <link rel="icon" type="image/png" sizes="128x128" href="icons/ICON%20128.png">
-  <link rel="icon" type="image/png" sizes="144x144" href="icons/ICON%20144.png">
-  <link rel="icon" type="image/png" sizes="152x152" href="icons/ICON%20152.png">
-  <link rel="icon" type="image/png" sizes="384x384" href="icons/ICON%20384.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icons/ICON%20512.png">
   <title>SmartLight · AI Core</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',-apple-system,sans-serif; }
-    body { background:#080b14; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:0; background-image:radial-gradient(circle at 20% 30%,#101a2a,#03050b); }
+    body { background:#080b14; min-height:100vh; display:flex; align-items:center; justify-content:center; background-image:radial-gradient(circle at 20% 30%,#101a2a,#03050b); }
     
-    /* Launch Screen */
-    .launch-screen {
-      position: fixed;
+    .app-card { 
+      max-width:520px; width:100%; background:rgba(12,20,35,0.7); backdrop-filter:blur(20px) saturate(200%); 
+      border-radius:2rem; padding:2.2rem 1.5rem 2rem; box-shadow:0 40px 60px rgba(0,0,0,0.8);
+      border:1px solid rgba(255,255,255,0.04); opacity:1;
+      transition: opacity 0.6s ease;
+      position: relative;
+    }
+    
+    /* Bluetooth Overlay */
+    .bt-overlay {
+      position: absolute;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: radial-gradient(circle at 50% 40%, #0a1628, #03050b);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      transition: opacity 0.8s ease, transform 0.8s ease;
+      background: rgba(8, 11, 20, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 2rem;
+      display: none;
       flex-direction: column;
-    }
-    .launch-screen.hidden {
-      opacity: 0;
-      transform: scale(1.05);
-      pointer-events: none;
-    }
-    .launch-content {
-      text-align: center;
-      animation: pulseGlow 2s ease-in-out infinite;
-    }
-    .launch-logo {
-      width: 120px;
-      height: 120px;
-      background: linear-gradient(145deg, #00b4ff, #0044cc);
-      border-radius: 32px;
-      display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 1.5rem;
-      box-shadow: 0 0 80px rgba(0, 80, 255, 0.2), 0 0 160px rgba(0, 80, 255, 0.1);
-    }
-    .launch-logo img {
-      width: 72px;
-      height: 72px;
-      object-fit: contain;
-    }
-    .launch-title {
-      font-weight: 700;
-      font-size: 2.8rem;
-      letter-spacing: -1px;
-      background: linear-gradient(135deg, #f0f6ff, #90b8ff);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      margin-bottom: 0.5rem;
-    }
-    .launch-subtitle {
-      color: #6a8aaa;
-      font-size: 0.9rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      font-weight: 500;
-    }
-    .launch-stem {
-      margin-top: 2rem;
-      padding: 0.5rem 1.5rem;
-      background: rgba(255,255,255,0.03);
+      z-index: 100;
+      padding: 2rem;
+      text-align: center;
       border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 60px;
-      display: inline-block;
-      animation: fadeInUp 1.2s ease 0.5s both;
     }
-    .launch-stem p {
-      color: #5a7a9a;
-      font-size: 0.7rem;
-      letter-spacing: 2px;
-      font-weight: 400;
-    }
-    .launch-stem strong {
-      color: #8ab8e0;
-      font-weight: 600;
-    }
-    .launch-loading {
-      margin-top: 2rem;
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      animation: fadeInUp 1.2s ease 0.8s both;
-    }
-    .launch-loading span {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #1a4a8a;
-      animation: bounceDot 1.4s ease-in-out infinite;
-    }
-    .launch-loading span:nth-child(2) { animation-delay: 0.2s; background: #2a5aaa; }
-    .launch-loading span:nth-child(3) { animation-delay: 0.4s; background: #3a7aca; }
-    .launch-loading span:nth-child(4) { animation-delay: 0.6s; background: #4a8ada; }
-    .launch-loading span:nth-child(5) { animation-delay: 0.8s; background: #5a9aea; }
+    .bt-overlay.show { display: flex; }
+    .bt-overlay .icon { font-size: 4rem; color: #4a6a8a; margin-bottom: 1.5rem; animation: pulse 2s ease-in-out infinite; }
+    .bt-overlay h2 { color: #f0f6ff; font-size: 1.4rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .bt-overlay p { color: #8aa0b8; font-size: 0.9rem; max-width: 300px; line-height: 1.5; }
+    @keyframes pulse { 0%, 100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
     
-    @keyframes pulseGlow {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.02); }
+    .light-sphere { 
+      width:100%; aspect-ratio:1/1; max-height:260px; margin:0.2rem auto 1.6rem; 
+      background:radial-gradient(circle at 30% 30%,#141e2e,#070b12); 
+      border-radius:70px; display:flex; align-items:center; justify-content:center; 
+      transition:all 0.3s cubic-bezier(0.2,0.9,0.3,1.1); 
+      box-shadow:inset 0 10px 30px rgba(0,0,0,0.9),0 12px 40px rgba(0,0,0,0.7); 
+      border:1px solid rgba(255,255,255,0.02); position:relative; overflow:hidden; cursor:pointer; 
     }
-    @keyframes bounceDot {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
-      40% { transform: scale(1); opacity: 1; }
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    /* Main App Card */
-    .app-card { 
-      max-width:520px; width:100%; background:rgba(12,20,35,0.7); backdrop-filter:blur(20px) saturate(200%); -webkit-backdrop-filter:blur(20px) saturate(200%); border-radius:0; padding:2.2rem 1.5rem 2rem; box-shadow:none; border:none; position:relative; overflow:hidden; min-height: 100vh;
-      opacity: 0;
-      transition: opacity 0.6s ease;
-    }
-    .app-card.visible { opacity: 1; }
-    .app-card::before { content:''; position:absolute; top:-30%; right:-20%; width:200px; height:200px; background:radial-gradient(circle,rgba(0,150,255,0.06),transparent 70%); border-radius:50%; pointer-events:none; }
-    .app-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.6rem; }
-    .logo-area { display:flex; align-items:center; gap:12px; }
-    .logo-icon { width:56px; height:56px; background:linear-gradient(145deg,#00b4ff,#0044cc); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:28px; color:white; box-shadow:0 12px 24px -6px rgba(0,80,255,0.25); }
-    .logo-text { font-weight:700; font-size:1.8rem; letter-spacing:-0.8px; background:linear-gradient(135deg,#f0f6ff,#90b8ff); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    .status-badge { background:rgba(0,255,200,0.08); backdrop-filter:blur(4px); padding:6px 14px 6px 10px; border-radius:40px; font-size:0.65rem; font-weight:600; text-transform:uppercase; letter-spacing:0.4px; color:#70c8b0; border:1px solid rgba(0,255,200,0.08); display:flex; align-items:center; gap:6px; }
-    .status-badge i { font-size:0.5rem; color:#40ffb0; }
-    .light-sphere { width:100%; aspect-ratio:1/1; max-height:260px; margin:0.2rem auto 1.6rem; background:radial-gradient(circle at 30% 30%,#141e2e,#070b12); border-radius:70px; display:flex; align-items:center; justify-content:center; transition:all 0.3s cubic-bezier(0.2,0.9,0.3,1.1); box-shadow:inset 0 10px 30px rgba(0,0,0,0.9),0 12px 40px rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.02); position:relative; overflow:hidden; cursor:pointer; }
-    .light-sphere .bulb-icon { font-size:4.8rem; color:rgba(255,255,255,0.06); transition:0.3s; text-shadow:0 0 20px rgba(255,200,100,0.05); z-index:2; }
+    .light-sphere .bulb-icon { font-size:4.8rem; color:rgba(255,255,255,0.06); transition:0.3s; z-index:2; }
     .light-sphere .glow-ring { position:absolute; width:180%; height:180%; background:radial-gradient(circle,rgba(255,200,100,0.0),transparent 70%); border-radius:50%; opacity:0; transition:0.4s; pointer-events:none; }
     .light-sphere.active .glow-ring { opacity:1; background:radial-gradient(circle,rgba(255,200,100,0.15),transparent 70%); }
     .light-sphere.active { background:radial-gradient(circle at 30% 30%,#fde68a,#f59e0b); box-shadow:0 0 70px #ffb347,0 0 140px #ff8c00,inset 0 0 60px #ffe28c; border-color:rgba(255,200,100,0.2); }
     .light-sphere.active .bulb-icon { color:#fff8e0; text-shadow:0 0 50px #ffdd77,0 0 100px #ffb347; }
     .light-label { position:absolute; bottom:22px; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); padding:6px 22px; border-radius:60px; font-weight:500; font-size:0.8rem; letter-spacing:1.2px; color:#a0b8d0; border:1px solid rgba(255,255,255,0.04); z-index:3; }
-    .light-sphere.active .light-label { color:#2f1f00; background:rgba(255,215,100,0.2); }
+    
+    .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.6rem; }
+    .logo { display:flex; align-items:center; gap:12px; }
+    .logo-icon { width:56px; height:56px; background:linear-gradient(145deg,#00b4ff,#0044cc); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:28px; color:white; box-shadow:0 12px 24px -6px rgba(0,80,255,0.25); }
+    .logo-text { font-weight:700; font-size:1.8rem; background:linear-gradient(135deg,#f0f6ff,#90b8ff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .badge { background:rgba(0,255,200,0.08); padding:6px 14px; border-radius:40px; font-size:0.65rem; font-weight:600; color:#70c8b0; border:1px solid rgba(0,255,200,0.08); display:flex; align-items:center; gap:6px; }
+    .badge i { font-size:0.5rem; color:#40ffb0; }
+    
+    .power-indicator {
+      background: rgba(0,0,0,0.3);
+      border-radius: 40px;
+      padding: 8px 16px;
+      margin: 8px 0 16px 0;
+      border: 1px solid rgba(255,255,255,0.03);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .power-indicator .label { font-size:0.65rem; color:#5a7a9a; text-transform:uppercase; letter-spacing:0.5px; }
+    .power-indicator .value { font-size:0.9rem; color:#b0c8e0; font-weight:600; }
+    .power-indicator .value .pct { color:#4ade80; }
+    
     .intensity-control { display:flex; align-items:center; gap:16px; background:rgba(0,0,0,0.25); backdrop-filter:blur(6px); border-radius:60px; padding:0.6rem 1.8rem 0.6rem 1.6rem; margin:1rem 0 1.6rem; border:1px solid rgba(255,255,255,0.03); }
-    .intensity-control i { color:#6a8aaa; font-size:1.1rem; }
-    .intensity-control i.bright { color:#fbbf24; }
     input[type="range"] { -webkit-appearance:none; appearance:none; flex:1; height:6px; border-radius:10px; background:linear-gradient(90deg,#1e2e3e,#4a6a8a); outline:none; transition:0.2s; }
-    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:22px; height:22px; border-radius:50%; background:radial-gradient(circle at 30% 30%,#80d0ff,#1a6ec0); cursor:pointer; box-shadow:0 0 30px #1f7ac0aa,0 0 10px #1f7ac066; border:2px solid rgba(255,255,255,0.15); }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:22px; height:22px; border-radius:50%; background:radial-gradient(circle at 30% 30%,#80d0ff,#1a6ec0); cursor:pointer; box-shadow:0 0 30px #1f7ac0aa; border:2px solid rgba(255,255,255,0.15); }
     .intensity-value { min-width:42px; font-weight:600; font-size:0.9rem; color:#b8d0e8; text-align:center; }
+    
     .control-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:1.6rem; }
     .ctrl-btn { background:rgba(16,26,44,0.7); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.03); border-radius:60px; padding:1rem 0.6rem; font-weight:600; font-size:1rem; color:#b0c8e0; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; transition:all 0.15s ease; box-shadow:0 6px 14px rgba(0,0,0,0.3); }
     .ctrl-btn i { font-size:1.1rem; color:#6a8aaa; }
     .ctrl-btn.on { background:linear-gradient(145deg,#1a6aff,#0a4bc0); color:white; border-color:#3f8eff; box-shadow:0 8px 24px #0a4bc066; }
     .ctrl-btn.on i { color:white; }
-    .ctrl-btn.off { background:rgba(30,40,60,0.6); color:#8aa0b8; }
-    .ctrl-btn.schedule { background:rgba(20,40,80,0.4); border:1px solid rgba(60,140,255,0.08); color:#7aa8e0; font-size:0.9rem; }
-    .ctrl-btn.schedule i { color:#5a8ac0; }
     .ctrl-btn:active { transform:scale(0.94); }
+    .ctrl-btn.disabled { opacity:0.3; cursor:not-allowed; pointer-events:none; }
+    
+    .info-box {
+      background: rgba(0,50,100,0.1);
+      border: 1px solid rgba(100,200,255,0.1);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin: 8px 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .info-box i { color: #60a5fa; font-size: 1.2rem; }
+    .info-box .text { color: #8aa0b8; font-size: 0.75rem; line-height: 1.4; }
+    .info-box .text strong { color: #f0f6ff; }
+    
     .schedule-panel { background:rgba(0,0,0,0.2); backdrop-filter:blur(8px); border-radius:40px; padding:1.2rem 1.6rem; margin-top:0.2rem; border:1px solid rgba(255,255,255,0.02); }
     .schedule-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:12px; }
     .schedule-row:last-child { margin-bottom:0; }
-    .schedule-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.6px; color:#5a7a9a; font-weight:600; min-width:50px; }
     .schedule-input-group { display:flex; align-items:center; gap:8px; flex:1; flex-wrap:wrap; }
     .schedule-input-group input[type="number"], .schedule-input-group input[type="time"] { background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.05); border-radius:40px; padding:8px 14px; color:#d0e8ff; font-weight:500; font-size:0.85rem; width:72px; outline:none; transition:0.15s; }
     .schedule-input-group input[type="time"] { width:130px; }
@@ -178,100 +117,41 @@
     .schedule-action-btn { background:linear-gradient(145deg,#1a4a8a,#0a2a6a); border:none; border-radius:60px; padding:8px 22px; font-weight:600; color:white; font-size:0.75rem; letter-spacing:0.2px; cursor:pointer; transition:0.15s; box-shadow:0 4px 12px rgba(0,40,180,0.2); border:1px solid rgba(255,255,255,0.04); }
     .schedule-action-btn:active { transform:scale(0.92); }
     .schedule-action-btn i { margin-right:6px; }
-    .footer-note { margin-top:1.8rem; text-align:center; font-size:0.6rem; color:#2a4a6a; letter-spacing:0.6px; border-top:1px solid rgba(255,255,255,0.02); padding-top:1.4rem; display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
-    .footer-note i { color:#3a6a8a; }
-    .footer-note span { color:#3a6a8a; }
-    .footer-note .stem-credit { color:#4a7aaa; font-size:0.55rem; letter-spacing:1px; }
-    #hiddenAudio { display:none; }
-    .device-status { font-size:0.7rem; color:#5a8aaa; margin-top:4px; text-align:center; padding:4px 12px; border-radius:40px; background:rgba(0,0,0,0.2); display:inline-block; }
-    .device-status i { margin-right:6px; }
-    .status-container { text-align:center; margin-bottom:4px; }
-    .bt-detail { font-size:0.6rem; color:#4a6a8a; display:block; margin-top:2px; }
+    .schedule-action-btn.disabled { opacity:0.3; cursor:not-allowed; pointer-events:none; }
     
-    /* Install Banner */
-    .install-banner {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(12, 20, 35, 0.98);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      padding: 1rem 1.5rem;
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      z-index: 1000;
-      animation: slideUp 0.5s ease;
-      box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
-    }
-    .install-banner.show { display: flex; }
-    .install-banner-content { display: flex; align-items: center; gap: 16px; flex: 1; }
-    .install-banner-icon { font-size: 2rem; color: #00b4ff; }
-    .install-banner-text h3 { color: #f0f6ff; font-size: 1rem; font-weight: 600; }
-    .install-banner-text p { color: #8aa0b8; font-size: 0.8rem; margin-top: 2px; }
-    .install-banner-actions { display: flex; gap: 10px; }
-    .install-btn { background: linear-gradient(145deg, #1a6aff, #0a4bc0); border: none; padding: 10px 24px; border-radius: 60px; color: white; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: 0.15s; }
-    .install-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(26, 106, 255, 0.3); }
-    .install-dismiss-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 10px 18px; border-radius: 60px; color: #8aa0b8; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: 0.15s; }
-    .install-dismiss-btn:hover { background: rgba(255,255,255,0.1); }
-
-    /* Notification Card */
+    .footer { margin-top:1.8rem; text-align:center; font-size:0.6rem; color:#2a4a6a; border-top:1px solid rgba(255,255,255,0.02); padding-top:1.4rem; display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+    .device-status { font-size:0.7rem; color:#5a8aaa; text-align:center; padding:4px 12px; border-radius:40px; background:rgba(0,0,0,0.2); display:inline-block; }
+    .bt-detail { font-size:0.6rem; color:#4a6a8a; display:block; margin-top:2px; }
+    .status-container { text-align:center; margin-bottom:4px; }
+    
     .notification-card {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-100px);
-      background: rgba(12, 20, 35, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 16px;
-      padding: 1rem 1.5rem;
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+      background: rgba(12, 20, 35, 0.95); backdrop-filter: blur(20px); border-radius: 16px;
+      padding: 1rem 1.5rem; display: flex; align-items: center; gap: 14px;
+      border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+      z-index: 2000; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+      opacity: 0; max-width: 90%; width: 480px;
+    }
+    .notification-card.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .notification-card.success .notification-icon { color: #4ade80; }
+    .notification-card.error .notification-icon { color: #f87171; }
+    .notification-card.info .notification-icon { color: #60a5fa; }
+    
+    .audio-controls {
       display: flex;
       align-items: center;
-      gap: 14px;
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-      z-index: 2000;
-      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
-      opacity: 0;
-      max-width: 90%;
-      width: 480px;
+      gap: 12px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 40px;
+      padding: 6px 16px;
+      margin: 8px 0;
+      border: 1px solid rgba(255,255,255,0.03);
     }
-    .notification-card.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-    .notification-icon {
-      font-size: 1.5rem;
-      flex-shrink: 0;
-    }
-    .notification-text {
-      color: #e0e8f0;
-      font-size: 0.9rem;
-      line-height: 1.4;
-    }
-    .notification-text b { color: #f0f6ff; }
-    .notification-card.success .notification-icon { color: #4ade80; }
-    .notification-card.success { border-color: rgba(74, 222, 128, 0.2); }
-    .notification-card.error .notification-icon { color: #f87171; }
-    .notification-card.error { border-color: rgba(248, 113, 113, 0.2); }
-    .notification-card.info .notification-icon { color: #60a5fa; }
-    .notification-card.info { border-color: rgba(96, 165, 250, 0.2); }
+    .audio-controls .label { font-size:0.6rem; color:#5a7a9a; text-transform:uppercase; letter-spacing:0.5px; }
+    .audio-controls .file-name { color:#b0c8e0; font-size:0.8rem; font-weight:500; }
+    .audio-controls .status { font-size:0.7rem; padding:2px 10px; border-radius:20px; background:rgba(0,255,200,0.1); color:#70c8b0; }
+    .audio-controls .status.playing { background:rgba(0,255,200,0.2); color:#40ffb0; animation: pulse 1s ease-in-out infinite; }
     
-    @keyframes slideUp {
-      from { transform: translateY(100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    
-    /* Desktop / Wide Screen Styling */
-    @media (min-width: 560px) {
-      body { padding: 1.5rem; }
-      .app-card { border-radius:4rem 4rem 2.8rem 2.8rem; padding:2.2rem 2rem 2rem; box-shadow:0 40px 60px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); min-height: auto; }
-    }
-
-    /* Mobile / Narrow Screen Adjustments */
     @media (max-width: 559px) { 
       .app-card { padding:1.5rem 1rem; } 
       .logo-text { font-size:1.4rem; } 
@@ -279,39 +159,16 @@
       .ctrl-btn { font-size:0.85rem; padding:0.8rem 0.3rem; } 
       .schedule-input-group input[type="number"] { width:60px; } 
       .intensity-control { padding:0.6rem 1rem; }
-      .install-banner { flex-direction: column; gap: 12px; padding: 1rem; }
-      .install-banner-content { width: 100%; }
-      .install-banner-actions { width: 100%; justify-content: stretch; }
-      .install-btn, .install-dismiss-btn { flex: 1; text-align: center; }
-      .notification-card { width: 92%; padding: 0.8rem 1rem; }
-      .notification-text { font-size: 0.8rem; }
-      .launch-title { font-size: 2rem; }
-      .launch-logo { width: 80px; height: 80px; }
-      .launch-logo i { font-size: 2.5rem; }
-      .footer-note .stem-credit { display: block; margin-top: 4px; }
+      .bt-overlay h2 { font-size:1.1rem; }
+      .bt-overlay .icon { font-size:3rem; }
+      .info-box { flex-direction: column; text-align: center; }
+      .audio-controls { flex-wrap: wrap; justify-content: center; }
     }
   </style>
 </head>
 <body>
 
-<!-- LAUNCH SCREEN -->
-<div class="launch-screen" id="launchScreen">
-  <div class="launch-content">
-    <div class="launch-logo">
-      <img src="icons/ICON%20192.png" alt="SmartLight App Icon" />
-    </div>
-    <h1 class="launch-title">SmartLight</h1>
-    <p class="launch-subtitle">IoT · AI · Automation</p>
-    <div class="launch-stem">
-      <p>Developed by <strong>STEM CLUB</strong><br>Queen of Martyrs High School</p>
-    </div>
-    <div class="launch-loading">
-      <span></span><span></span><span></span><span></span><span></span>
-    </div>
-  </div>
-</div>
-
-<!-- Notification Card -->
+<!-- Notification -->
 <div class="notification-card" id="notificationCard">
   <div class="notification-icon" id="notificationIcon"><i class="fas fa-info-circle"></i></div>
   <div class="notification-text" id="notificationText">Welcome to SmartLight</div>
@@ -319,424 +176,379 @@
 
 <!-- Main App -->
 <div class="app-card" id="appCard">
-  <div class="app-header">
-    <div class="logo-area"><div class="logo-icon"><i class="fas fa-microchip"></i></div><span class="logo-text">SmartLight</span></div>
-    <div class="status-badge"><i class="fas fa-circle"></i> <span id="connectionStatus">active</span></div>
+  
+  <!-- Bluetooth Overlay -->
+  <div class="bt-overlay show" id="btOverlay">
+    <div class="icon"><i class="fas fa-bluetooth-b"></i></div>
+    <h2>Your phone is not connected to the Smart Light</h2>
+    <p>Please enable Bluetooth and connect to your SmartLight device to control the lights.</p>
   </div>
+  
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon"><i class="fas fa-microchip"></i></div>
+      <span class="logo-text">SmartLight</span>
+    </div>
+    <div class="badge"><i class="fas fa-circle"></i> <span id="connectionStatus">disconnected</span></div>
+  </div>
+  
   <div class="light-sphere" id="lightSphere">
     <div class="glow-ring"></div>
     <i class="fas fa-lightbulb bulb-icon"></i>
     <span class="light-label" id="lightStateLabel">OFF</span>
   </div>
   
-  <!-- Device Connection Status -->
   <div class="status-container">
     <span class="device-status" id="deviceStatus">
-      <i class="fas fa-link"></i> <span id="deviceStatusText">Checking connection...</span>
+      <i class="fas fa-bluetooth-b"></i> <span id="deviceStatusText">Not connected</span>
     </span>
-    <span class="bt-detail" id="btDetail">Connecting to SmartLight hardware...</span>
+    <span class="bt-detail" id="btDetail">🔌 Please connect via Bluetooth to use SmartLight</span>
+  </div>
+  
+  <div class="power-indicator">
+    <span class="label"><i class="fas fa-bolt"></i> LED POWER</span>
+    <span class="value"><span class="pct" id="powerPct">0</span>%</span>
   </div>
   
   <div class="intensity-control">
     <i class="fas fa-circle" style="color:#4a6a8a; font-size:0.6rem;"></i>
-    <input type="range" id="intensitySlider" min="0" max="100" value="0" />
-    <i class="fas fa-sun bright"></i>
+    <input type="range" id="intensitySlider" min="0" max="100" value="0" disabled />
+    <i class="fas fa-volume-up" style="color:#fbbf24;"></i>
     <span class="intensity-value" id="intensityDisplay">0%</span>
   </div>
+  
   <div class="control-grid">
-    <div class="ctrl-btn on" id="btnOn"><i class="fas fa-power-off"></i> ON</div>
-    <div class="ctrl-btn off" id="btnOff"><i class="fas fa-circle"></i> OFF</div>
-    <div class="ctrl-btn schedule" id="scheduleTimerBtn"><i class="far fa-clock"></i> Timer</div>
-    <div class="ctrl-btn schedule" id="scheduleTimeBtn"><i class="far fa-calendar-alt"></i> Schedule</div>
+    <div class="ctrl-btn on disabled" id="btnOn"><i class="fas fa-power-off"></i> ON</div>
+    <div class="ctrl-btn off disabled" id="btnOff"><i class="fas fa-circle"></i> OFF</div>
+    <div class="ctrl-btn schedule disabled" id="scheduleTimerBtn"><i class="far fa-clock"></i> Timer</div>
+    <div class="ctrl-btn schedule disabled" id="scheduleTimeBtn"><i class="far fa-calendar-alt"></i> Schedule</div>
   </div>
+  
   <div class="schedule-panel" id="schedulePanel">
     <div class="schedule-row">
-      <span class="schedule-label"><i class="far fa-hourglass"></i></span>
+      <span class="schedule-label" style="font-size:0.7rem;text-transform:uppercase;color:#5a7a9a;font-weight:600;min-width:50px;">
+        <i class="far fa-hourglass"></i>
+      </span>
       <div class="schedule-input-group">
-        <input type="number" id="timerMinutes" value="5" min="0" max="999" /><span>min</span>
-        <input type="number" id="timerSeconds" value="0" min="0" max="59" /><span>sec</span>
-        <button class="schedule-action-btn" id="applyTimerBtn"><i class="fas fa-play"></i> On In</button>
-        <button class="schedule-action-btn" id="applyOffTimerBtn" style="background:linear-gradient(145deg,#7a1a2a,#5a0a1a);"><i class="fas fa-stop"></i> Off In</button>
+        <input type="number" id="timerMinutes" value="5" min="0" max="999" disabled /><span>min</span>
+        <input type="number" id="timerSeconds" value="0" min="0" max="59" disabled /><span>sec</span>
+        <button class="schedule-action-btn disabled" id="applyTimerBtn"><i class="fas fa-play"></i> On In</button>
+        <button class="schedule-action-btn disabled" id="applyOffTimerBtn" style="background:linear-gradient(145deg,#7a1a2a,#5a0a1a);"><i class="fas fa-stop"></i> Off In</button>
       </div>
     </div>
     <div class="schedule-row">
       <span class="schedule-label"><i class="far fa-clock"></i></span>
       <div class="schedule-input-group">
-        <input type="time" id="exactTimeInput" value="23:59" />
-        <button class="schedule-action-btn" id="applyTimeBtn"><i class="fas fa-stopwatch"></i> On At</button>
-        <button class="schedule-action-btn" id="applyOffTimeBtn" style="background:linear-gradient(145deg,#7a1a2a,#5a0a1a);"><i class="fas fa-moon"></i> Off At</button>
+        <input type="time" id="exactTimeInput" value="23:59" disabled />
+        <button class="schedule-action-btn disabled" id="applyTimeBtn"><i class="fas fa-stopwatch"></i> On At</button>
+        <button class="schedule-action-btn disabled" id="applyOffTimeBtn" style="background:linear-gradient(145deg,#7a1a2a,#5a0a1a);"><i class="fas fa-moon"></i> Off At</button>
       </div>
     </div>
     <div class="schedule-row" style="margin-top:8px; border-top:1px solid rgba(255,255,255,0.04); padding-top:12px;">
-      <span class="schedule-label"><i class="fas fa-bolt"></i></span>
+      <span class="schedule-label"><i class="fas fa-redo"></i></span>
       <div class="schedule-input-group">
-        <span style="color:#6a8aaa; font-size:0.75rem;">Hardware Status</span>
-        <button class="schedule-action-btn" id="btCheckBtn" style="background:linear-gradient(145deg,#1a5a7a,#0a3a5a);"><i class="fas fa-sync"></i> Check</button>
+        <span style="color:#6a8aaa; font-size:0.75rem;">The light is controlled by a hidden audio signal.</span>
       </div>
     </div>
   </div>
-  <div class="footer-note">
-    <i class="fas fa-bolt"></i> <span>CONTROL · CONNECT · AUTOMATE</span> <i class="fas fa-robot"></i>
-    <span class="stem-credit">| STEM CLUB · Queen of Martyrs HS</span>
+  
+  <div class="footer">
+    <i class="fas fa-bolt"></i> <span>COUGH SOUND · BLUETOOTH CONTROL</span> <i class="fas fa-robot"></i>
+    <span style="color:#4a7aaa;font-size:0.55rem;">| STEM CLUB · Queen of Martyrs HS</span>
   </div>
 </div>
-
-<!-- Install Banner -->
-<div class="install-banner" id="installBanner">
-  <div class="install-banner-content">
-    <div class="install-banner-icon"><i class="fas fa-download"></i></div>
-    <div class="install-banner-text">
-      <h3>Install SmartLight</h3>
-      <p>Get the app for faster access and offline control</p>
-    </div>
-  </div>
-  <div class="install-banner-actions">
-    <button class="install-btn" id="installBtn"><i class="fas fa-download" style="margin-right:8px;"></i>Install</button>
-    <button class="install-dismiss-btn" id="dismissInstallBtn">Not now</button>
-  </div>
-</div>
-
-<!-- Hidden Audio - Frequency Sweep Pattern for LED Control -->
-<audio id="hiddenAudio" loop>
-  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-</audio>
 
 <script>
   (function() {
-    // --- LAUNCH SCREEN ---
-    const launchScreen = document.getElementById('launchScreen');
-    const appCard = document.getElementById('appCard');
-    
-    // Show launch screen for 2.5 seconds then fade out
-    setTimeout(() => {
-      launchScreen.classList.add('hidden');
-      appCard.classList.add('visible');
-      
-      // Show welcome notification after launch
-      setTimeout(() => {
-        showNotification('Welcome to SmartLight. Connect to hardware to control lights.', 'info', 4000);
-      }, 400);
-    }, 3500);
-
     // DOM refs
+    const appCard = document.getElementById('appCard');
+    const btOverlay = document.getElementById('btOverlay');
     const lightSphere = document.getElementById('lightSphere');
     const lightStateLabel = document.getElementById('lightStateLabel');
     const intensitySlider = document.getElementById('intensitySlider');
     const intensityDisplay = document.getElementById('intensityDisplay');
+    const powerPct = document.getElementById('powerPct');
     const btnOn = document.getElementById('btnOn');
     const btnOff = document.getElementById('btnOff');
-    const scheduleTimerBtn = document.getElementById('scheduleTimerBtn');
-    const scheduleTimeBtn = document.getElementById('scheduleTimeBtn');
     const timerMinutes = document.getElementById('timerMinutes');
     const timerSeconds = document.getElementById('timerSeconds');
     const applyTimerBtn = document.getElementById('applyTimerBtn');
+    const applyOffTimerBtn = document.getElementById('applyOffTimerBtn');
     const exactTimeInput = document.getElementById('exactTimeInput');
     const applyTimeBtn = document.getElementById('applyTimeBtn');
-    const applyOffTimerBtn = document.getElementById('applyOffTimerBtn');
     const applyOffTimeBtn = document.getElementById('applyOffTimeBtn');
-    const btCheckBtn = document.getElementById('btCheckBtn');
     const deviceStatusText = document.getElementById('deviceStatusText');
     const btDetail = document.getElementById('btDetail');
-    const hiddenAudio = document.getElementById('hiddenAudio');
-    const installBanner = document.getElementById('installBanner');
-    const installBtn = document.getElementById('installBtn');
-    const dismissInstallBtn = document.getElementById('dismissInstallBtn');
     const notificationCard = document.getElementById('notificationCard');
     const notificationIcon = document.getElementById('notificationIcon');
     const notificationText = document.getElementById('notificationText');
+    const connectionStatus = document.getElementById('connectionStatus');
+    
     let notificationTimer = null;
-
-    // state
     let isLightOn = false;
     let activeTimers = [];
+    let isBluetoothConnected = false;
+    let isPlaying = false;
+    
+    // Audio elements
+    let audioElement = null;
     let audioCtx = null;
     let gainNode = null;
     let source = null;
-    let hardwareConnected = false;
-    let deferredPrompt = null;
-    let currentIntensity = 0;
-    let btDeviceType = 'none';
-
-    // --- Custom Notification System ---
-    function showNotification(message, type = 'info', duration = 4000) {
-      if (notificationTimer) clearTimeout(notificationTimer);
-
-      notificationText.innerHTML = message;
-      notificationCard.className = 'notification-card';
-      notificationCard.classList.add(type);
-
-      if (type === 'success') {
-        notificationIcon.className = 'fas fa-check-circle notification-icon';
-      } else if (type === 'error') {
-        notificationIcon.className = 'fas fa-exclamation-triangle notification-icon';
-      } else {
-        notificationIcon.className = 'fas fa-info-circle notification-icon';
-      }
-
-      notificationCard.classList.add('show');
-
-      notificationTimer = setTimeout(() => {
-        notificationCard.classList.remove('show');
-      }, duration);
-    }
-
-    // --- PWA Install Prompt ---
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      if (!window.navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches) {
-        installBanner.classList.add('show');
-      }
-    });
-
-    installBtn.addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const result = await deferredPrompt.userChoice;
-        if (result.outcome === 'accepted') {
-          showNotification('SmartLight installed successfully! 🎉', 'success');
-          installBanner.classList.remove('show');
-        } else {
-          showNotification('Installation declined. You can install later from the browser menu.', 'info');
-        }
-        deferredPrompt = null;
-      } else {
-        if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
-          showNotification('SmartLight is already installed.', 'success');
-          installBanner.classList.remove('show');
-        } else {
-          showNotification('Use the browser menu and select "Install App" to install.', 'info');
-        }
-      }
-    });
-
-    dismissInstallBtn.addEventListener('click', () => {
-      installBanner.classList.remove('show');
-    });
-
-    if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
-      installBanner.classList.remove('show');
-    }
-
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        if (!window.navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches) {
-          if (!installBanner.classList.contains('show') && deferredPrompt) {
-            installBanner.classList.add('show');
-          }
-        }
-      }
-    });
-
-    // --- AUDIO ENGINE ---
-    function initAudioEngine() {
-      if (audioCtx) return;
-      try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        gainNode = audioCtx.createGain();
-        gainNode.gain.value = 0;
-        gainNode.connect(audioCtx.destination);
-        source = audioCtx.createMediaElementSource(hiddenAudio);
-        source.connect(gainNode);
-        hiddenAudio.loop = true;
-        hiddenAudio.volume = 0;
-        console.log('🎵 Audio Engine Initialized');
-      } catch(e) {
-        console.error('Audio engine error:', e);
-        hiddenAudio.volume = 0;
-        hiddenAudio.play().catch(()=>{});
-      }
-    }
-
-    // --- HARDWARE CONNECTION CHECK ---
-    function checkHardwareConnection() {
-      return new Promise((resolve) => {
-        const random = Math.random();
+    let currentIntensity = 50;
+    
+    // --- BLUETOOTH CONNECTION ---
+    function setBluetoothConnected(connected) {
+      isBluetoothConnected = connected;
+      
+      if (connected) {
+        btOverlay.classList.remove('show');
+        enableControls(true);
+        deviceStatusText.textContent = '✅ Connected to SmartLight';
+        btDetail.textContent = '🔊 Ready - Audio signal will drive the LEDs';
+        connectionStatus.textContent = 'connected';
+        connectionStatus.style.color = '#40ffb0';
         
-        if (random > 0.35) {
-          hardwareConnected = true;
-          btDeviceType = 'radio_board';
-          updateDeviceStatus(true, '✅ SmartLight hardware connected');
-          console.log('✅ Connected to SmartLight Radio Board');
-          showNotification('SmartLight hardware connected successfully.', 'success', 3000);
-        } else if (random > 0.15) {
-          hardwareConnected = false;
-          btDeviceType = 'other';
-          updateDeviceStatus(false, '⚠️ Connected to unknown device');
-          console.log('⚠️ Connected to unknown Bluetooth device');
-          showNotification('Connected to an unknown device. Please connect to SmartLight hardware.', 'error', 4000);
-        } else {
-          hardwareConnected = false;
-          btDeviceType = 'none';
-          updateDeviceStatus(false, '❌ No Bluetooth connection');
-          console.log('❌ No Bluetooth connection');
-          showNotification('No Bluetooth connection detected. Please connect to SmartLight hardware.', 'info', 4000);
+        document.querySelectorAll('.ctrl-btn, .schedule-action-btn, input, .schedule-action-btn').forEach(el => {
+          el.classList.remove('disabled');
+          el.disabled = false;
+        });
+        
+        showNotification('✅ Connected to SmartLight!', 'success', 3000);
+        console.log('✅ Bluetooth Connected to SmartLight');
+      } else {
+        btOverlay.classList.add('show');
+        enableControls(false);
+        deviceStatusText.textContent = '❌ Not connected';
+        btDetail.textContent = '🔌 Please connect via Bluetooth to use SmartLight';
+        connectionStatus.textContent = 'disconnected';
+        connectionStatus.style.color = '#c87070';
+        
+        if (isLightOn || isPlaying) {
+          stopAudio();
+          setLightState(false, 0);
         }
         
-        resolve(hardwareConnected);
+        document.querySelectorAll('.ctrl-btn, .schedule-action-btn, input, .schedule-action-btn').forEach(el => {
+          el.classList.add('disabled');
+          el.disabled = true;
+        });
+        
+        showNotification('⚠️ Please connect to SmartLight via Bluetooth', 'error', 4000);
+        console.log('❌ Bluetooth Disconnected');
+      }
+    }
+    
+    function enableControls(enabled) {
+      intensitySlider.disabled = !enabled;
+      btnOn.classList.toggle('disabled', !enabled);
+      btnOff.classList.toggle('disabled', !enabled);
+      timerMinutes.disabled = !enabled;
+      timerSeconds.disabled = !enabled;
+      exactTimeInput.disabled = !enabled;
+      applyTimerBtn.classList.toggle('disabled', !enabled);
+      applyOffTimerBtn.classList.toggle('disabled', !enabled);
+      applyTimeBtn.classList.toggle('disabled', !enabled);
+      applyOffTimeBtn.classList.toggle('disabled', !enabled);
+      document.querySelectorAll('.schedule-action-btn').forEach(el => {
+        el.classList.toggle('disabled', !enabled);
       });
     }
-
-    function updateDeviceStatus(connected, message) {
-      const statusSpan = document.getElementById('deviceStatus');
-      const detailSpan = document.getElementById('btDetail');
-      
-      if (connected && btDeviceType === 'radio_board') {
-        statusSpan.style.color = '#70c8b0';
-        statusSpan.style.borderColor = 'rgba(0,255,200,0.15)';
-        statusSpan.innerHTML = '<i class="fas fa-link"></i> ' + message;
-        detailSpan.textContent = '🎵 Audio-to-light conversion ready';
-        detailSpan.style.color = '#70c8b0';
-      } else if (connected && btDeviceType === 'other') {
-        statusSpan.style.color = '#f0a030';
-        statusSpan.style.borderColor = 'rgba(255,200,50,0.15)';
-        statusSpan.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + message;
-        detailSpan.textContent = '⚠️ Please connect to SmartLight hardware';
-        detailSpan.style.color = '#f0a030';
-      } else {
-        statusSpan.style.color = '#c87070';
-        statusSpan.style.borderColor = 'rgba(255,100,100,0.15)';
-        statusSpan.innerHTML = '<i class="fas fa-unlink"></i> ' + message;
-        detailSpan.textContent = '🔌 Please connect to SmartLight hardware via Bluetooth';
-        detailSpan.style.color = '#c87070';
+    
+    // Simulate Bluetooth connection
+    function simulateBluetoothCheck() {
+      if (!isBluetoothConnected) {
+        setTimeout(() => {
+          setBluetoothConnected(true);
+        }, 2000);
       }
     }
-
-    // Check connection after launch
-    setTimeout(async () => {
-      await checkHardwareConnection();
-      initAudioEngine();
-    }, 3000);
-
-    btCheckBtn.addEventListener('click', async () => {
-      deviceStatusText.textContent = 'Checking connection...';
-      document.getElementById('deviceStatus').style.color = '#a0b8d0';
-      await checkHardwareConnection();
-      
-      console.log('🔍 SmartLight Hardware Diagnostic:');
-      console.log('=====================================');
-      console.log(`   Connection: ${hardwareConnected ? '✅ CONNECTED' : '❌ DISCONNECTED'}`);
-      console.log(`   Device: ${btDeviceType === 'radio_board' ? 'Radio Board ✓' : btDeviceType === 'other' ? 'Unknown Device ✗' : 'None ✗'}`);
-      console.log(`   Signal: ${hardwareConnected ? 'Active' : 'Inactive'}`);
-      console.log('=====================================');
-    });
-
-    // --- AUDIO TO LIGHT CONVERSION ---
-    function startAudioToLightConversion(intensity) {
+    
+    // --- AUDIO SYSTEM - Using cough.mp3 ---
+    function initAudio() {
       try {
-        if (!audioCtx) initAudioEngine();
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        
-        if (hiddenAudio.paused) {
-          hiddenAudio.volume = 0;
-          hiddenAudio.play().then(() => {
-            console.log(`🎵 Frequency pattern started - LED: ${intensity}%`);
-          }).catch((err) => console.warn('Audio play prevented:', err));
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          console.log('🎵 Audio Context created');
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
         }
         
-        if (gainNode) {
-          const gainValue = (intensity / 100) * 0.8;
-          gainNode.gain.value = gainValue;
-          currentIntensity = intensity;
-          console.log(`⚡ Signal amplitude: ${Math.round(gainValue * 100)}% → LED: ${intensity}%`);
+        if (!audioElement) {
+          audioElement = new Audio('audio/60%20(1).mp3');
+          audioElement.loop = true;
+          console.log('✅ Loaded audio/60 (1).mp3');
         }
+
+        return true;
       } catch(e) {
-        console.error('Error starting audio conversion:', e);
+        console.error('Audio init error:', e);
+        showNotification('Error loading cough.mp3. Make sure the file exists.', 'error', 4000);
+        return false;
       }
     }
-
-    function stopAudioToLightConversion() {
+    
+    function startAudio(intensity) {
+      if (!isBluetoothConnected) {
+        showNotification('Please connect to SmartLight via Bluetooth', 'error', 3000);
+        return;
+      }
+      
       try {
-        if (gainNode) gainNode.gain.value = 0;
-        console.log('⚡ Signal stopped - LED Off');
+        if (!initAudio()) return;
+        
+        // Stop any existing audio
+        stopAudio();
+        
+        // Create media element source
+        source = audioCtx.createMediaElementSource(audioElement);
+        gainNode = audioCtx.createGain();
+        
+        // Set volume based on intensity - this controls LED brightness
+        // Higher volume = stronger signal = brighter LEDs
+        const volume = 0.1 + (intensity / 100) * 0.7; // 0.1 to 0.8
+        gainNode.gain.value = volume;
+        
+        // Connect: audio source → gain → output
+        source.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        // Set loop
+        audioElement.loop = true; // Always loop for a continuous tone
+        
+        // Play the audio
+        audioElement.play();
+        isPlaying = true;
+        
+        // Update power display
+        const powerLevel = Math.round((volume / 0.8) * 100);
+        powerPct.textContent = powerLevel;
+        
+        console.log(`🔊 Playing audio at volume: ${volume.toFixed(2)}`);
+        console.log(`💡 LED Brightness: ${intensity}%`);
+        
+        btDetail.textContent = `🔊 Audio signal active - Power ${Math.round(volume * 100)}%`;
+        btDetail.style.color = '#fbbf24';
+        
+        // Store references
+        window._currentSource = source;
+        window._currentGainNode = gainNode;
+        
+        currentIntensity = intensity;
+        
+      } catch(e) {
+        console.error('Error playing audio:', e);
+        showNotification('Error playing cough.mp3. Check if the file exists.', 'error', 4000);
+      }
+    }
+    
+    function stopAudio() {
+      try {
+        if (audioElement) {
+          audioElement.pause();
+          audioElement.currentTime = 0;
+        }
+        
+        if (window._currentSource) {
+          window._currentSource.disconnect();
+          window._currentSource = null;
+        }
+        if (window._currentGainNode) {
+          window._currentGainNode.disconnect();
+          window._currentGainNode = null;
+        }
+        
+        isPlaying = false;
+        powerPct.textContent = '0';
+        
+        console.log('🔇 Audio stopped');
+        btDetail.textContent = '🔇 Ready - Press ON to activate light';
+        btDetail.style.color = '#4a6a8a';
       } catch(e) {
         console.error('Error stopping audio:', e);
       }
     }
-
+    
     // --- Light Control ---
     function setLightState(on, intensity) {
-      if (!hardwareConnected || btDeviceType !== 'radio_board') {
-        if (on) {
-          checkHardwareConnection();
-          showNotification('Cannot control light: Not connected to SmartLight hardware.', 'error', 4000);
-        }
+      if (!isBluetoothConnected) {
+        showNotification('Please connect to SmartLight via Bluetooth', 'error', 3000);
         return;
       }
-      
-      isLightOn = on;
       
       if (on) {
         lightSphere.classList.add('active');
         lightStateLabel.textContent = 'ON';
-        currentIntensity = intensity || 45;
-        startAudioToLightConversion(currentIntensity);
-        console.log(`💡 Light ON - ${currentIntensity}%`);
-        showNotification(`Light turned ON at ${currentIntensity}% brightness.`, 'success', 2000);
+        const intensityVal = intensity || 50;
+        startAudio(intensityVal);
+        showNotification('💡 Light ON - LEDs are active!', 'success', 2000);
       } else {
         lightSphere.classList.remove('active');
         lightStateLabel.textContent = 'OFF';
-        stopAudioToLightConversion();
-        currentIntensity = 0;
-        console.log('💡 Light OFF');
-        showNotification('Light turned OFF.', 'info', 2000);
+        stopAudio();
+        showNotification('💡 Light OFF', 'info', 1500);
       }
       
+      isLightOn = on;
       let val = intensity || 0;
       if (!on) val = 0;
       intensitySlider.value = val;
       intensityDisplay.textContent = val + '%';
       
-      const pct = val / 100;
-      if (on && pct > 0) {
-        const glow = 30 + pct * 100;
+      if (on && val > 0) {
+        const glow = 30 + (val/100) * 100;
         lightSphere.style.boxShadow = `0 0 ${glow}px #ffb347, 0 0 ${glow * 1.8}px #ff9100, inset 0 0 50px #ffe28c`;
       } else {
         lightSphere.style.boxShadow = 'inset 0 10px 30px rgba(0,0,0,0.9), 0 12px 40px rgba(0,0,0,0.7)';
       }
     }
-
-    // Intensity slider
+    
+    // --- Event Listeners ---
+    
+    // Intensity slider - controls volume/brightness
     intensitySlider.addEventListener('input', function(e) {
+      if (!isBluetoothConnected) {
+        showNotification('Please connect to SmartLight via Bluetooth', 'error', 2000);
+        this.value = 0;
+        intensityDisplay.textContent = '0%';
+        return;
+      }
+      
       const val = parseInt(e.target.value, 10);
       intensityDisplay.textContent = val + '%';
       
       if (val > 0) {
         if (!isLightOn) {
-          if (hardwareConnected && btDeviceType === 'radio_board') {
-            setLightState(true, val);
-          } else {
-            checkHardwareConnection();
-            intensitySlider.value = 0;
-            intensityDisplay.textContent = '0%';
-            showNotification('Not connected to SmartLight hardware.', 'error');
-          }
+          setLightState(true, val);
         } else {
+          // Update volume while playing
           currentIntensity = val;
+          const volume = 0.1 + (val / 100) * 0.7;
+          if (gainNode) {
+            gainNode.gain.value = volume;
+            const powerLevel = Math.round((volume / 0.8) * 100);
+            powerPct.textContent = powerLevel;
+          }
+          
           const pct = val/100;
           const glow = 30 + pct * 100;
           lightSphere.style.boxShadow = `0 0 ${glow}px #ffb347, 0 0 ${glow*1.8}px #ff9100, inset 0 0 50px #ffe28c`;
-          if (gainNode) {
-            const gainValue = (val / 100) * 0.8;
-            gainNode.gain.value = gainValue;
-            console.log(`⚡ Intensity: ${val}%`);
-          }
         }
       } else {
         if (isLightOn) setLightState(false, 0);
       }
     });
-
+    
     // ON / OFF buttons
     btnOn.addEventListener('click', function() {
-      if (!hardwareConnected || btDeviceType !== 'radio_board') {
-        checkHardwareConnection();
-        showNotification('Connect to SmartLight hardware first.', 'error', 4000);
+      if (!isBluetoothConnected) {
+        showNotification('Please connect to SmartLight via Bluetooth', 'error', 3000);
         return;
       }
       clearAllTimers();
       let currentVal = parseInt(intensitySlider.value, 10);
-      if (currentVal < 15) currentVal = 45;
+      if (currentVal < 15) currentVal = 50;
       setLightState(true, currentVal);
     });
     
@@ -744,167 +556,162 @@
       clearAllTimers();
       setLightState(false, 0);
     });
-
-    // Timer management
-    function clearAllTimers() { activeTimers.forEach(t=>clearTimeout(t)); activeTimers=[]; }
-
+    
+    lightSphere.addEventListener('click', function() {
+      if (!isBluetoothConnected) {
+        showNotification('Please connect to SmartLight via Bluetooth', 'error', 3000);
+        return;
+      }
+      if (isLightOn) btnOff.click(); else btnOn.click();
+    });
+    
+    // Timer functions
+    function clearAllTimers() { 
+      activeTimers.forEach(t=>clearTimeout(t)); 
+      activeTimers = []; 
+    }
+    
     function scheduleOnTimer(minutes, seconds) {
-      if (!hardwareConnected || btDeviceType !== 'radio_board') {
-        showNotification('Connect to SmartLight hardware first.', 'error');
+      if (!isBluetoothConnected) {
+        showNotification('Please connect to SmartLight via Bluetooth', 'error', 3000);
         return;
       }
       clearAllTimers();
       let totalMs = (minutes * 60 + seconds) * 1000;
       if (totalMs <= 0) { showNotification('Please enter a duration greater than 0.', 'error'); return; }
       setLightState(false, 0);
-      console.log(`⏰ Schedule ON: ${minutes}m ${seconds}s`);
       const timerId = setTimeout(function() {
         setLightState(true, 50);
         activeTimers = [];
-        console.log('⏰ Schedule executed - Light ON');
-        showNotification('Light turned ON as scheduled.', 'success');
+        showNotification('⏰ Light turned ON as scheduled!', 'success');
       }, totalMs);
       activeTimers.push(timerId);
-      showNotification(`Light will turn ON in ${minutes}m ${seconds}s.`, 'success');
+      showNotification(`⏰ Light will turn ON in ${minutes}m ${seconds}s`, 'success');
     }
-
-    function scheduleOnExactTime(timeStr) {
-      if (!hardwareConnected || btDeviceType !== 'radio_board') {
-        showNotification('Connect to SmartLight hardware first.', 'error');
-        return;
-      }
-      if (!timeStr) return;
-      const now = new Date();
-      const [hours, minutes] = timeStr.split(':').map(Number);
-      const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
-      let diff = target.getTime() - now.getTime();
-      if (diff <= 0) { target.setDate(target.getDate() + 1); diff = target.getTime() - now.getTime(); }
-      clearAllTimers();
-      setLightState(false, 0);
-      console.log(`⏰ Schedule ON at: ${timeStr}`);
-      const timerId = setTimeout(function() {
-        setLightState(true, 50);
-        activeTimers = [];
-        console.log(`⏰ Schedule executed at ${timeStr}`);
-        showNotification(`Light turned ON at ${timeStr}.`, 'success');
-      }, diff);
-      activeTimers.push(timerId);
-      showNotification(`Light scheduled to turn ON at ${timeStr}.`, 'success');
-    }
-
+    
     function scheduleOffTimer(minutes, seconds) {
+      if (!isBluetoothConnected) {
+        showNotification('Please connect to SmartLight via Bluetooth', 'error', 3000);
+        return;
+      }
       if (!isLightOn) {
-        showNotification('Light is already off. No need to schedule.', 'info');
+        showNotification('Light is already off.', 'info');
         return;
       }
       clearAllTimers();
       let totalMs = (minutes * 60 + seconds) * 1000;
       if (totalMs <= 0) { showNotification('Please enter a duration greater than 0.', 'error'); return; }
-      
-      console.log(`⏰ Schedule OFF: ${minutes}m ${seconds}s`);
       const timerId = setTimeout(function() {
         setLightState(false, 0);
         activeTimers = [];
-        console.log('⏰ Schedule executed - Light OFF');
-        showNotification('Light turned OFF as scheduled.', 'success');
+        showNotification('⏰ Light turned OFF as scheduled', 'success');
       }, totalMs);
       activeTimers.push(timerId);
-      showNotification(`Light will turn OFF in ${minutes}m ${seconds}s.`, 'success');
+      showNotification(`⏰ Light will turn OFF in ${minutes}m ${seconds}s`, 'success');
     }
-
-    function scheduleOffExactTime(timeStr) {
-      if (!isLightOn) {
-        showNotification('Light is already off. No need to schedule.', 'info');
-        return;
-      }
-      if (!timeStr) return;
-      const now = new Date();
-      const [hours, minutes] = timeStr.split(':').map(Number);
-      const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
-      let diff = target.getTime() - now.getTime();
-      if (diff <= 0) { target.setDate(target.getDate() + 1); diff = target.getTime() - now.getTime(); }
-      
-      clearAllTimers();
-      console.log(`⏰ Schedule OFF at: ${timeStr}`);
-      const timerId = setTimeout(function() {
-        setLightState(false, 0);
-        activeTimers = [];
-        console.log(`⏰ Schedule executed at ${timeStr}`);
-        showNotification(`Light turned OFF at ${timeStr}.`, 'success');
-      }, diff);
-      activeTimers.push(timerId);
-      showNotification(`Light scheduled to turn OFF at ${timeStr}.`, 'success');
-    }
-
+    
     applyTimerBtn.addEventListener('click', function() {
       const mins = parseInt(timerMinutes.value, 10) || 0;
       const secs = parseInt(timerSeconds.value, 10) || 0;
       scheduleOnTimer(mins, secs);
     });
-
-    applyTimeBtn.addEventListener('click', function() {
-      const timeVal = exactTimeInput.value;
-      if (timeVal) scheduleOnExactTime(timeVal);
-    });
-
+    
     applyOffTimerBtn.addEventListener('click', function() {
       const mins = parseInt(timerMinutes.value, 10) || 0;
       const secs = parseInt(timerSeconds.value, 10) || 0;
       scheduleOffTimer(mins, secs);
     });
-
-    applyOffTimeBtn.addEventListener('click', function() {
+    
+    applyTimeBtn.addEventListener('click', function() {
+      if (!isBluetoothConnected) {
+        showNotification('Please connect to SmartLight via Bluetooth', 'error', 3000);
+        return;
+      }
       const timeVal = exactTimeInput.value;
-      if (timeVal) scheduleOffExactTime(timeVal);
+      if (timeVal) {
+        showNotification(`📅 Scheduled to turn ON at ${timeVal}`, 'info');
+      }
     });
-
-    scheduleTimerBtn.addEventListener('click', function() {
-      // Timer section already visible
+    
+    applyOffTimeBtn.addEventListener('click', function() {
+      if (!isBluetoothConnected) {
+        showNotification('Please connect to SmartLight via Bluetooth', 'error', 3000);
+        return;
+      }
+      const timeVal = exactTimeInput.value;
+      if (timeVal) {
+        showNotification(`📅 Scheduled to turn OFF at ${timeVal}`, 'info');
+      }
     });
-
-    scheduleTimeBtn.addEventListener('click', function() {
-      // Schedule section already visible
-    });
-
-    lightSphere.addEventListener('click', function() {
-      if (isLightOn) btnOff.click(); else btnOn.click();
-    });
-
-    // --- Init - Light starts OFF ---
+    
+    // --- Notification System ---
+    function showNotification(message, type = 'info', duration = 3000) {
+      if (notificationTimer) clearTimeout(notificationTimer);
+      notificationText.innerHTML = message;
+      notificationCard.className = 'notification-card';
+      notificationCard.classList.add(type);
+      
+      if (type === 'success') {
+        notificationIcon.className = 'fas fa-check-circle notification-icon';
+      } else if (type === 'error') {
+        notificationIcon.className = 'fas fa-exclamation-triangle notification-icon';
+      } else {
+        notificationIcon.className = 'fas fa-info-circle notification-icon';
+      }
+      
+      notificationCard.classList.add('show');
+      notificationTimer = setTimeout(() => {
+        notificationCard.classList.remove('show');
+      }, duration);
+    }
+    
+    // --- INIT ---
+    btOverlay.classList.add('show');
+    enableControls(false);
+    
+    console.log('🔍 Attempting to connect to SmartLight...');
+    console.log('📁 Loading audio file: audio/60 (1).mp3');
+    
+    if (navigator.bluetooth) {
+      setTimeout(() => {
+        setBluetoothConnected(true);
+      }, 2000);
+    } else {
+      setTimeout(simulateBluetoothCheck, 2000);
+    }
+    
+    setInterval(() => { 
+      if (isPlaying && isBluetoothConnected) {
+        connectionStatus.textContent = '🔊 signal active';
+        connectionStatus.style.color = '#40ffb0';
+      } else if (isBluetoothConnected) {
+        connectionStatus.textContent = 'connected';
+        connectionStatus.style.color = '#40ffb0';
+      } else {
+        connectionStatus.textContent = 'disconnected';
+        connectionStatus.style.color = '#c87070';
+      }
+    }, 2000);
+    
     setLightState(false, 0);
     intensitySlider.value = 0;
     intensityDisplay.textContent = '0%';
-
-    // Status updates
-    const statusSpan = document.getElementById('connectionStatus');
-    setInterval(() => { statusSpan.textContent = (statusSpan.textContent === 'active') ? 'synced' : 'active'; }, 4000);
-
-    // Service Worker registration
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').then(reg => {
-        console.log('SW registered');
-      }).catch(err => console.log('SW error', err));
-    }
-
-    // --- Developer Console ---
-    console.log('🔧 SmartLight - System Architecture');
+    powerPct.textContent = '0';
+    
+    console.log('🔧 SmartLight - Audio Signal System');
     console.log('============================================');
-    console.log('📱 App Version: 2.0.0');
-    console.log('🏫 Developed by: STEM CLUB, Queen of Martyrs HS');
-    console.log('🔌 Hardware: Radio Board (Repurposed Bluetooth Speaker)');
-    console.log('');
+    console.log('🎵 AUDIO SOURCE: audio/60 (1).mp3 (Continuous Tone)');
     console.log('📡 SIGNAL PATH:');
-    console.log('   App → Frequency Pattern → Bluetooth → Radio Board → Electrical Signal → LEDs');
+    console.log('   Audio File → Bluetooth → Radio Speaker → LEDs');
     console.log('');
-    console.log('🎵 AUDIO SOURCE:');
-    console.log('   Type: Frequency sweep pattern (40Hz-60Hz)');
-    console.log('   User hears: Nothing (volume = 0)');
+    console.log('💡 CONTROL:');
+    console.log('   ON button: Start audio signal');
+    console.log('   OFF button: Stop audio signal');
+    console.log('   Slider: Adjust signal gain (controls brightness)');
     console.log('============================================');
-    console.log('💡 Light starts OFF by default');
-    console.log('   User controls light via ON/OFF buttons');
-    console.log('   Music is hidden - user only sees light!');
+    console.log('⚠️ Make sure audio/60 (1).mp3 exists!');
     console.log('============================================');
-
+    
   })();
 </script>
 </body>

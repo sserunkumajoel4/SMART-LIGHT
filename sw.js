@@ -1,9 +1,10 @@
 // Service Worker for Mutanda Traders Admin
-const CACHE_NAME = 'smartlight-v2.0.9';
+const CACHE_NAME = 'smartlight-v2.0.17';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
+  './audio/60%20(1).mp3',
   './icons/ICON%2072.png',
   './icons/ICON%2096.png',
   './icons/ICON%20128.png',
@@ -22,7 +23,6 @@ self.addEventListener('install', event => {
         console.log('Caching files...');
         return cache.addAll(urlsToCache);
       })
-      .then(() => self.skipWaiting())
   );
 });
 
@@ -46,49 +46,30 @@ self.addEventListener('activate', event => {
 
 // Fetch event
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  
-  // Skip external requests
-  if (event.request.url.includes('firebase') || 
-      event.request.url.includes('cloudinary') ||
-      event.request.url.includes('gstatic.com') ||
-      event.request.url.includes('cdnjs.cloudflare.com')) {
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-
-        return fetch(event.request.clone())
-          .then(response => {
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-
+  // For navigation requests (the HTML page), use a network-first strategy.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // If the fetch is successful, cache the new response.
+          return caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, response.clone());
             return response;
-          })
-          .catch(() => {
-            // Return cached homepage for HTML requests
-            if (event.request.headers.get('accept').includes('text/html')) {
-              return caches.match('./index.html');
-            }
-            return new Response('Network error happened', {
-              status: 408,
-              headers: { 'Content-Type': 'text/plain' }
-            });
           });
+        })
+        .catch(() => {
+          // If the network fails, serve the cached page.
+          return caches.match(event.request);
+        })
+    );
+  } else {
+    // For all other requests (CSS, images, audio), use a cache-first strategy.
+    event.respondWith(
+      caches.match(event.request).then(response => {
+        return response || fetch(event.request);
       })
-  );
+    );
+  }
 });
 
 // Push notifications
@@ -132,3 +113,10 @@ self.addEventListener('message', event => {
     self.skipWaiting();
   }
 });
+
+// Message handling
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});show old channgees instead of the new ones
