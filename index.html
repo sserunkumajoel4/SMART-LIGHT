@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',-apple-system,sans-serif; }
-    body { background:#080b14; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1.5rem; background-image:radial-gradient(circle at 20% 30%,#101a2a,#03050b); }
+    body { background:#080b14; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:0; background-image:radial-gradient(circle at 20% 30%,#101a2a,#03050b); }
     
     /* Launch Screen */
     .launch-screen {
@@ -131,7 +131,7 @@
     
     /* Main App Card */
     .app-card { 
-      max-width:520px; width:100%; background:rgba(12,20,35,0.7); backdrop-filter:blur(20px) saturate(200%); -webkit-backdrop-filter:blur(20px) saturate(200%); border-radius:4rem 4rem 2.8rem 2.8rem; padding:2.2rem 2rem 2rem; box-shadow:0 40px 60px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); position:relative; overflow:hidden; 
+      max-width:520px; width:100%; background:rgba(12,20,35,0.7); backdrop-filter:blur(20px) saturate(200%); -webkit-backdrop-filter:blur(20px) saturate(200%); border-radius:0; padding:2.2rem 1.5rem 2rem; box-shadow:none; border:none; position:relative; overflow:hidden; min-height: 100vh;
       opacity: 0;
       transition: opacity 0.6s ease;
     }
@@ -265,7 +265,14 @@
       to { transform: translateY(0); opacity: 1; }
     }
     
-    @media (max-width: 440px) { 
+    /* Desktop / Wide Screen Styling */
+    @media (min-width: 560px) {
+      body { padding: 1.5rem; }
+      .app-card { border-radius:4rem 4rem 2.8rem 2.8rem; padding:2.2rem 2rem 2rem; box-shadow:0 40px 60px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); min-height: auto; }
+    }
+
+    /* Mobile / Narrow Screen Adjustments */
+    @media (max-width: 559px) { 
       .app-card { padding:1.5rem 1rem; } 
       .logo-text { font-size:1.4rem; } 
       .control-grid { gap:8px; } 
@@ -348,20 +355,22 @@
       <div class="schedule-input-group">
         <input type="number" id="timerMinutes" value="5" min="0" max="999" /><span>min</span>
         <input type="number" id="timerSeconds" value="0" min="0" max="59" /><span>sec</span>
-        <button class="schedule-action-btn" id="applyTimerBtn"><i class="fas fa-play"></i> Set</button>
+        <button class="schedule-action-btn" id="applyTimerBtn"><i class="fas fa-play"></i> On In</button>
+        <button class="schedule-action-btn" id="applyOffTimerBtn" style="background:linear-gradient(145deg,#7a1a2a,#5a0a1a);"><i class="fas fa-stop"></i> Off In</button>
       </div>
     </div>
     <div class="schedule-row">
       <span class="schedule-label"><i class="far fa-clock"></i></span>
       <div class="schedule-input-group">
         <input type="time" id="exactTimeInput" value="23:59" />
-        <button class="schedule-action-btn" id="applyTimeBtn"><i class="fas fa-stopwatch"></i> At</button>
+        <button class="schedule-action-btn" id="applyTimeBtn"><i class="fas fa-stopwatch"></i> On At</button>
+        <button class="schedule-action-btn" id="applyOffTimeBtn" style="background:linear-gradient(145deg,#7a1a2a,#5a0a1a);"><i class="fas fa-moon"></i> Off At</button>
       </div>
     </div>
     <div class="schedule-row" style="margin-top:8px; border-top:1px solid rgba(255,255,255,0.04); padding-top:12px;">
       <span class="schedule-label"><i class="fas fa-bolt"></i></span>
       <div class="schedule-input-group">
-        <span style="color:#6a8aaa; font-size:0.75rem;">Schedule ON when OFF</span>
+        <span style="color:#6a8aaa; font-size:0.75rem;">Hardware Status</span>
         <button class="schedule-action-btn" id="btCheckBtn" style="background:linear-gradient(145deg,#1a5a7a,#0a3a5a);"><i class="fas fa-sync"></i> Check</button>
       </div>
     </div>
@@ -423,6 +432,8 @@
     const applyTimerBtn = document.getElementById('applyTimerBtn');
     const exactTimeInput = document.getElementById('exactTimeInput');
     const applyTimeBtn = document.getElementById('applyTimeBtn');
+    const applyOffTimerBtn = document.getElementById('applyOffTimerBtn');
+    const applyOffTimeBtn = document.getElementById('applyOffTimeBtn');
     const btCheckBtn = document.getElementById('btCheckBtn');
     const deviceStatusText = document.getElementById('deviceStatusText');
     const btDetail = document.getElementById('btDetail');
@@ -781,6 +792,50 @@
       showNotification(`Light scheduled to turn ON at ${timeStr}.`, 'success');
     }
 
+    function scheduleOffTimer(minutes, seconds) {
+      if (!isLightOn) {
+        showNotification('Light is already off. No need to schedule.', 'info');
+        return;
+      }
+      clearAllTimers();
+      let totalMs = (minutes * 60 + seconds) * 1000;
+      if (totalMs <= 0) { showNotification('Please enter a duration greater than 0.', 'error'); return; }
+      
+      console.log(`⏰ Schedule OFF: ${minutes}m ${seconds}s`);
+      const timerId = setTimeout(function() {
+        setLightState(false, 0);
+        activeTimers = [];
+        console.log('⏰ Schedule executed - Light OFF');
+        showNotification('Light turned OFF as scheduled.', 'success');
+      }, totalMs);
+      activeTimers.push(timerId);
+      showNotification(`Light will turn OFF in ${minutes}m ${seconds}s.`, 'success');
+    }
+
+    function scheduleOffExactTime(timeStr) {
+      if (!isLightOn) {
+        showNotification('Light is already off. No need to schedule.', 'info');
+        return;
+      }
+      if (!timeStr) return;
+      const now = new Date();
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+      let diff = target.getTime() - now.getTime();
+      if (diff <= 0) { target.setDate(target.getDate() + 1); diff = target.getTime() - now.getTime(); }
+      
+      clearAllTimers();
+      console.log(`⏰ Schedule OFF at: ${timeStr}`);
+      const timerId = setTimeout(function() {
+        setLightState(false, 0);
+        activeTimers = [];
+        console.log(`⏰ Schedule executed at ${timeStr}`);
+        showNotification(`Light turned OFF at ${timeStr}.`, 'success');
+      }, diff);
+      activeTimers.push(timerId);
+      showNotification(`Light scheduled to turn OFF at ${timeStr}.`, 'success');
+    }
+
     applyTimerBtn.addEventListener('click', function() {
       const mins = parseInt(timerMinutes.value, 10) || 0;
       const secs = parseInt(timerSeconds.value, 10) || 0;
@@ -790,6 +845,17 @@
     applyTimeBtn.addEventListener('click', function() {
       const timeVal = exactTimeInput.value;
       if (timeVal) scheduleOnExactTime(timeVal);
+    });
+
+    applyOffTimerBtn.addEventListener('click', function() {
+      const mins = parseInt(timerMinutes.value, 10) || 0;
+      const secs = parseInt(timerSeconds.value, 10) || 0;
+      scheduleOffTimer(mins, secs);
+    });
+
+    applyOffTimeBtn.addEventListener('click', function() {
+      const timeVal = exactTimeInput.value;
+      if (timeVal) scheduleOffExactTime(timeVal);
     });
 
     scheduleTimerBtn.addEventListener('click', function() {
