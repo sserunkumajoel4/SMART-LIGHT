@@ -1,5 +1,5 @@
 // Service Worker for Mutanda Traders Admin
-const CACHE_NAME = 'smartlight-v2.0.17';
+const CACHE_NAME = 'smartlight-v2.0.29';
 const urlsToCache = [
   './',
   './index.html',
