@@ -10,9 +10,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
+    /* RESET & GLOBAL */
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',-apple-system,sans-serif; }
     body { background:#080b14; min-height:100vh; display:flex; align-items:center; justify-content:center; background-image:radial-gradient(circle at 20% 30%,#101a2a,#03050b); }
     
+    /* APP CARD */
     .app-card { 
       max-width:520px; width:100%; background:rgba(12,20,35,0.7); backdrop-filter:blur(20px) saturate(200%); 
       border-radius:2rem; padding:2.2rem 1.5rem 2rem; box-shadow:0 40px 60px rgba(0,0,0,0.8);
@@ -21,7 +23,7 @@
       position: relative;
     }
     
-    /* Bluetooth Overlay */
+    /* BLUETOOTH OVERLAY */
     .bt-overlay {
       position: absolute;
       top: 0;
@@ -47,6 +49,7 @@
     .bt-overlay p { color: #8aa0b8; font-size: 0.9rem; max-width: 300px; line-height: 1.5; }
     @keyframes pulse { 0%, 100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
     
+    /* LIGHT SPHERE */
     .light-sphere { 
       width:100%; aspect-ratio:1/1; max-height:260px; margin:0.2rem auto 1.6rem; 
       background:radial-gradient(circle at 30% 30%,#141e2e,#070b12); 
@@ -60,6 +63,7 @@
     .light-sphere.active .glow-ring { opacity:1; background:radial-gradient(circle,rgba(255,200,100,0.15),transparent 70%); }
     .light-sphere.active { background:radial-gradient(circle at 30% 30%,#fde68a,#f59e0b); box-shadow:0 0 70px #ffb347,0 0 140px #ff8c00,inset 0 0 60px #ffe28c; border-color:rgba(255,200,100,0.2); }
     .light-sphere.active .bulb-icon { color:#fff8e0; text-shadow:0 0 50px #ffdd77,0 0 100px #ffb347; }
+    .light-sphere.dim .bulb-icon { color:#ffe8b0; text-shadow:0 0 30px #ffdd77,0 0 60px #ffb347; }
     .light-label { position:absolute; bottom:22px; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); padding:6px 22px; border-radius:60px; font-weight:500; font-size:0.8rem; letter-spacing:1.2px; color:#a0b8d0; border:1px solid rgba(255,255,255,0.04); z-index:3; }
     
     .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.6rem; }
@@ -155,6 +159,16 @@
     }
     .silent-badge i { font-size: 0.7rem; }
     
+    .version-badge {
+      background: rgba(255,200,50,0.08);
+      border: 1px solid rgba(255,200,50,0.1);
+      padding: 2px 8px;
+      border-radius: 30px;
+      font-size: 0.45rem;
+      color: #aab8c0;
+      margin-left: 6px;
+    }
+    
     @media (max-width: 559px) { 
       .app-card { padding:1.5rem 1rem; } 
       .logo-text { font-size:1.4rem; } 
@@ -191,6 +205,7 @@
       <div class="logo-icon"><i class="fas fa-microchip"></i></div>
       <span class="logo-text">SmartLight</span>
       <span class="silent-badge"><i class="fas fa-volume-mute"></i> SILENT</span>
+      <span class="version-badge">v2.1</span>
     </div>
     <div class="badge"><i class="fas fa-circle"></i> <span id="connectionStatus">disconnected</span></div>
   </div>
@@ -272,6 +287,34 @@
 
 <script>
   (function() {
+    // FORCE REFRESH - Clear old cache and reload
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+          console.log('📦 Old Service Worker unregistered');
+        }
+        // Register new one
+        navigator.serviceWorker.register('sw.js?v=' + Date.now())
+          .then(function(registration) {
+            console.log('✅ New Service Worker registered');
+          })
+          .catch(function(err) {
+            console.log('⚠️ Service Worker registration failed:', err);
+          });
+      });
+    }
+    
+    // Clear cache on load
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (let name of names) {
+          caches.delete(name);
+          console.log('🗑️ Cache deleted:', name);
+        }
+      });
+    }
+
     // DOM refs
     const appCard = document.getElementById('appCard');
     const btOverlay = document.getElementById('btOverlay');
@@ -413,12 +456,20 @@
         oscillator.frequency.value = freq;
         
         // SQUARE WAVE - Better for triggering transistors!
-        // Square waves have sharp transitions that work well with transistor switches
         oscillator.type = 'square';
         
-        // Gain controls the signal amplitude - this triggers the transistor
-        // The transistor amplifies this signal using an external power source
-        const gainValue = 0.3 + (intensity / 100) * 0.5; // 0.3 to 0.8
+        // CRITICAL: When intensity is 0, signal is completely OFF
+        // When intensity > 0, signal amplitude scales linearly with intensity
+        // This ensures the transistor is fully OFF when intensity is 0
+        let gainValue = 0;
+        if (intensity > 0) {
+          // Scale from 0.3 to 0.8 based on intensity (0-100)
+          // This gives a good range for transistor triggering
+          gainValue = 0.2 + (intensity / 100) * 0.6;
+          // Clamp to ensure clean OFF state
+          gainValue = Math.max(0.2, Math.min(0.8, gainValue));
+        }
+        
         gainNode.gain.value = gainValue;
         
         oscillator.connect(gainNode);
@@ -462,7 +513,7 @@
         }
         isAudioPlaying = false;
         powerPct.textContent = '0';
-        console.log('🔇 Signal stopped');
+        console.log('🔇 Signal stopped - Transistor OFF');
         btDetail.textContent = '🔇 Silent mode - Ready to control';
         btDetail.style.color = '#4a6a8a';
       } catch(e) {
@@ -477,30 +528,34 @@
         return;
       }
       
-      if (on) {
+      if (on && intensity > 0) {
         lightSphere.classList.add('active');
+        lightSphere.classList.remove('dim');
         lightStateLabel.textContent = 'ON';
-        const intensityVal = intensity || 50;
-        startPowerSignal(intensityVal);
+        startPowerSignal(intensity);
         showNotification('💡 Light ON - Signal active', 'success', 1500);
+        
+        // Update glow based on intensity
+        const glow = 30 + (intensity/100) * 100;
+        lightSphere.style.boxShadow = `0 0 ${glow}px #ffb347, 0 0 ${glow * 1.8}px #ff9100, inset 0 0 50px #ffe28c`;
       } else {
         lightSphere.classList.remove('active');
+        lightSphere.classList.remove('dim');
         lightStateLabel.textContent = 'OFF';
         stopPowerSignal();
-        showNotification('💡 Light OFF', 'info', 1500);
+        showNotification('💡 Light OFF - Signal stopped', 'info', 1500);
+        
+        // Reset to default shadow
+        lightSphere.style.boxShadow = 'inset 0 10px 30px rgba(0,0,0,0.9), 0 12px 40px rgba(0,0,0,0.7)';
       }
       
-      isLightOn = on;
-      let val = intensity || 0;
-      if (!on) val = 0;
+      isLightOn = on && intensity > 0;
+      let val = (on && intensity > 0) ? intensity : 0;
       intensitySlider.value = val;
       intensityDisplay.textContent = val + '%';
       
-      if (on && val > 0) {
-        const glow = 30 + (val/100) * 100;
-        lightSphere.style.boxShadow = `0 0 ${glow}px #ffb347, 0 0 ${glow * 1.8}px #ff9100, inset 0 0 50px #ffe28c`;
-      } else {
-        lightSphere.style.boxShadow = 'inset 0 10px 30px rgba(0,0,0,0.9), 0 12px 40px rgba(0,0,0,0.7)';
+      if (!on || intensity === 0) {
+        powerPct.textContent = '0';
       }
     }
     
@@ -517,17 +572,9 @@
       intensityDisplay.textContent = val + '%';
       
       if (val > 0) {
-        if (!isLightOn) {
-          setLightState(true, val);
-        } else {
-          currentIntensity = val;
-          const pct = val/100;
-          const glow = 30 + pct * 100;
-          lightSphere.style.boxShadow = `0 0 ${glow}px #ffb347, 0 0 ${glow*1.8}px #ff9100, inset 0 0 50px #ffe28c`;
-          startPowerSignal(val);
-        }
+        setLightState(true, val);
       } else {
-        if (isLightOn) setLightState(false, 0);
+        setLightState(false, 0);
       }
     });
     
@@ -538,7 +585,7 @@
       }
       clearAllTimers();
       let currentVal = parseInt(intensitySlider.value, 10);
-      if (currentVal < 15) currentVal = 50;
+      if (currentVal < 10) currentVal = 50;
       setLightState(true, currentVal);
     });
     
@@ -679,7 +726,8 @@
     btOverlay.classList.add('show');
     enableControls(false);
     
-    console.log('🔍 Attempting to connect to SmartLight...');
+    console.log('🔍 SmartLight v2.1 - Starting...');
+    console.log('✅ Cache cleared, new version loaded');
     
     if (navigator.bluetooth) {
       setTimeout(() => {
@@ -723,6 +771,12 @@
     console.log('   Audio signal controls the transistor switch');
     console.log('   LEDs get FULL POWER from the battery!');
     console.log('============================================');
+    console.log('🔴 IMPORTANT: When intensity is 0%, signal is completely OFF');
+    console.log('🟢 When intensity > 0%, signal amplitude scales with intensity');
+    console.log('💡 This ensures the light is truly OFF when turned off');
+    
+    // Show version
+    showNotification('🔄 SmartLight v2.1 loaded - Cache cleared!', 'info', 3000);
     
   })();
 </script>
