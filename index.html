@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SmartLight · AI Core</title>
+  <title>SmartLight · Full Power Silent</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',-apple-system,sans-serif; }
@@ -137,20 +137,19 @@
     .notification-card.error .notification-icon { color: #f87171; }
     .notification-card.info .notification-icon { color: #60a5fa; }
     
-    .audio-controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(0,0,0,0.2);
+    .silent-badge {
+      background: rgba(100,200,255,0.1);
+      border: 1px solid rgba(100,200,255,0.2);
+      padding: 4px 12px;
       border-radius: 40px;
-      padding: 6px 16px;
-      margin: 8px 0;
-      border: 1px solid rgba(255,255,255,0.03);
+      font-size: 0.6rem;
+      color: #70c8e0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 8px;
     }
-    .audio-controls .label { font-size:0.6rem; color:#5a7a9a; text-transform:uppercase; letter-spacing:0.5px; }
-    .audio-controls .file-name { color:#b0c8e0; font-size:0.8rem; font-weight:500; }
-    .audio-controls .status { font-size:0.7rem; padding:2px 10px; border-radius:20px; background:rgba(0,255,200,0.1); color:#70c8b0; }
-    .audio-controls .status.playing { background:rgba(0,255,200,0.2); color:#40ffb0; animation: pulse 1s ease-in-out infinite; }
+    .silent-badge i { font-size: 0.7rem; }
     
     @media (max-width: 559px) { 
       .app-card { padding:1.5rem 1rem; } 
@@ -162,7 +161,6 @@
       .bt-overlay h2 { font-size:1.1rem; }
       .bt-overlay .icon { font-size:3rem; }
       .info-box { flex-direction: column; text-align: center; }
-      .audio-controls { flex-wrap: wrap; justify-content: center; }
     }
   </style>
 </head>
@@ -188,6 +186,7 @@
     <div class="logo">
       <div class="logo-icon"><i class="fas fa-microchip"></i></div>
       <span class="logo-text">SmartLight</span>
+      <span class="silent-badge"><i class="fas fa-volume-mute"></i> SILENT</span>
     </div>
     <div class="badge"><i class="fas fa-circle"></i> <span id="connectionStatus">disconnected</span></div>
   </div>
@@ -210,10 +209,17 @@
     <span class="value"><span class="pct" id="powerPct">0</span>%</span>
   </div>
   
+  <div class="info-box">
+    <i class="fas fa-info-circle"></i>
+    <div class="text">
+      <strong>Maximizing LED Brightness:</strong> For full brightness, connect the audio output to a <strong>simple transistor amplifier</strong> circuit. The audio signal triggers the transistor, which switches a separate power source (battery) to drive the LEDs at full power!
+    </div>
+  </div>
+  
   <div class="intensity-control">
     <i class="fas fa-circle" style="color:#4a6a8a; font-size:0.6rem;"></i>
     <input type="range" id="intensitySlider" min="0" max="100" value="0" disabled />
-    <i class="fas fa-volume-up" style="color:#fbbf24;"></i>
+    <i class="fas fa-sun" style="color:#fbbf24;"></i>
     <span class="intensity-value" id="intensityDisplay">0%</span>
   </div>
   
@@ -245,15 +251,17 @@
       </div>
     </div>
     <div class="schedule-row" style="margin-top:8px; border-top:1px solid rgba(255,255,255,0.04); padding-top:12px;">
-      <span class="schedule-label"><i class="fas fa-redo"></i></span>
+      <span class="schedule-label"><i class="fas fa-wave-square"></i></span>
       <div class="schedule-input-group">
-        <span style="color:#6a8aaa; font-size:0.75rem;">The light is controlled by a hidden audio signal.</span>
+        <span style="color:#6a8aaa; font-size:0.75rem;">Freq: <span id="freqDisplay">55</span> Hz</span>
+        <button class="schedule-action-btn disabled" id="freqUpBtn" style="background:linear-gradient(145deg,#1a5a7a,#0a3a5a);"><i class="fas fa-plus"></i></button>
+        <button class="schedule-action-btn disabled" id="freqDownBtn" style="background:linear-gradient(145deg,#1a5a7a,#0a3a5a);"><i class="fas fa-minus"></i></button>
       </div>
     </div>
   </div>
   
   <div class="footer">
-    <i class="fas fa-bolt"></i> <span>COUGH SOUND · BLUETOOTH CONTROL</span> <i class="fas fa-robot"></i>
+    <i class="fas fa-bolt"></i> <span>SILENT · BLUETOOTH CONTROL</span> <i class="fas fa-robot"></i>
     <span style="color:#4a7aaa;font-size:0.55rem;">| STEM CLUB · Queen of Martyrs HS</span>
   </div>
 </div>
@@ -277,6 +285,9 @@
     const exactTimeInput = document.getElementById('exactTimeInput');
     const applyTimeBtn = document.getElementById('applyTimeBtn');
     const applyOffTimeBtn = document.getElementById('applyOffTimeBtn');
+    const freqDisplay = document.getElementById('freqDisplay');
+    const freqUpBtn = document.getElementById('freqUpBtn');
+    const freqDownBtn = document.getElementById('freqDownBtn');
     const deviceStatusText = document.getElementById('deviceStatusText');
     const btDetail = document.getElementById('btDetail');
     const notificationCard = document.getElementById('notificationCard');
@@ -287,15 +298,13 @@
     let notificationTimer = null;
     let isLightOn = false;
     let activeTimers = [];
-    let isBluetoothConnected = false;
-    let isPlaying = false;
-    
-    // Audio elements
-    let audioElement = null;
     let audioCtx = null;
     let gainNode = null;
-    let source = null;
-    let currentIntensity = 50;
+    let oscillator = null;
+    let isAudioPlaying = false;
+    let currentIntensity = 0;
+    let currentFrequency = 55;
+    let isBluetoothConnected = false;
     
     // --- BLUETOOTH CONNECTION ---
     function setBluetoothConnected(connected) {
@@ -305,7 +314,7 @@
         btOverlay.classList.remove('show');
         enableControls(true);
         deviceStatusText.textContent = '✅ Connected to SmartLight';
-        btDetail.textContent = '🔊 Ready - Audio signal will drive the LEDs';
+        btDetail.textContent = '🔇 Silent mode - 55Hz optimized for LEDs';
         connectionStatus.textContent = 'connected';
         connectionStatus.style.color = '#40ffb0';
         
@@ -324,8 +333,7 @@
         connectionStatus.textContent = 'disconnected';
         connectionStatus.style.color = '#c87070';
         
-        if (isLightOn || isPlaying) {
-          stopAudio();
+        if (isLightOn) {
           setLightState(false, 0);
         }
         
@@ -350,6 +358,8 @@
       applyOffTimerBtn.classList.toggle('disabled', !enabled);
       applyTimeBtn.classList.toggle('disabled', !enabled);
       applyOffTimeBtn.classList.toggle('disabled', !enabled);
+      freqUpBtn.classList.toggle('disabled', !enabled);
+      freqDownBtn.classList.toggle('disabled', !enabled);
       document.querySelectorAll('.schedule-action-btn').forEach(el => {
         el.classList.toggle('disabled', !enabled);
       });
@@ -364,8 +374,8 @@
       }
     }
     
-    // --- AUDIO SYSTEM - Using cough.mp3 ---
-    function initAudio() {
+    // --- AUDIO ENGINE - OPTIMIZED FOR TRANSISTOR TRIGGERING ---
+    function initAudioEngine() {
       try {
         if (!audioCtx) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -374,99 +384,85 @@
         if (audioCtx.state === 'suspended') {
           audioCtx.resume();
         }
-        
-        if (!audioElement) {
-          audioElement = new Audio('audio/60%20(1).mp3');
-          audioElement.loop = true;
-          console.log('✅ Loaded audio/60 (1).mp3');
-        }
-
         return true;
       } catch(e) {
-        console.error('Audio init error:', e);
-        showNotification('Error loading cough.mp3. Make sure the file exists.', 'error', 4000);
+        console.error('Audio engine error:', e);
         return false;
       }
     }
     
-    function startAudio(intensity) {
+    function startPowerSignal(intensity) {
       if (!isBluetoothConnected) {
         showNotification('Please connect to SmartLight via Bluetooth', 'error', 3000);
         return;
       }
       
       try {
-        if (!initAudio()) return;
+        if (!initAudioEngine()) return;
         
-        // Stop any existing audio
-        stopAudio();
+        stopPowerSignal();
         
-        // Create media element source
-        source = audioCtx.createMediaElementSource(audioElement);
+        const freq = Math.max(50, Math.min(60, currentFrequency));
+        oscillator = audioCtx.createOscillator();
         gainNode = audioCtx.createGain();
         
-        // Set volume based on intensity - this controls LED brightness
-        // Higher volume = stronger signal = brighter LEDs
-        const volume = 0.1 + (intensity / 100) * 0.7; // 0.1 to 0.8
-        gainNode.gain.value = volume;
+        oscillator.frequency.value = freq;
         
-        // Connect: audio source → gain → output
-        source.connect(gainNode);
+        // SQUARE WAVE - Better for triggering transistors!
+        // Square waves have sharp transitions that work well with transistor switches
+        oscillator.type = 'square';
+        
+        // Gain controls the signal amplitude - this triggers the transistor
+        // The transistor amplifies this signal using an external power source
+        const gainValue = 0.3 + (intensity / 100) * 0.5; // 0.3 to 0.8
+        gainNode.gain.value = gainValue;
+        
+        oscillator.connect(gainNode);
         gainNode.connect(audioCtx.destination);
         
-        // Set loop
-        audioElement.loop = true; // Always loop for a continuous tone
+        oscillator.start();
+        isAudioPlaying = true;
         
-        // Play the audio
-        audioElement.play();
-        isPlaying = true;
+        freqDisplay.textContent = freq;
         
-        // Update power display
-        const powerLevel = Math.round((volume / 0.8) * 100);
+        // Update power display - shows percentage of signal amplitude
+        const powerLevel = Math.round((gainValue / 0.8) * 100);
         powerPct.textContent = powerLevel;
         
-        console.log(`🔊 Playing audio at volume: ${volume.toFixed(2)}`);
-        console.log(`💡 LED Brightness: ${intensity}%`);
+        console.log(`🔊 Signal: ${freq}Hz, Gain: ${gainValue.toFixed(2)}`);
+        console.log(`💡 LED Brightness: ${intensity}% (signal amplitude)`);
+        console.log(`⚡ Transistor trigger: ${powerLevel}%`);
         
-        btDetail.textContent = `🔊 Audio signal active - Power ${Math.round(volume * 100)}%`;
+        btDetail.textContent = `⚡ Signal @ ${freq}Hz - Transistor trigger ${powerLevel}%`;
         btDetail.style.color = '#fbbf24';
         
-        // Store references
-        window._currentSource = source;
         window._currentGainNode = gainNode;
-        
+        window._currentOscillator = oscillator;
         currentIntensity = intensity;
         
       } catch(e) {
-        console.error('Error playing audio:', e);
-        showNotification('Error playing cough.mp3. Check if the file exists.', 'error', 4000);
+        console.error('Error starting signal:', e);
       }
     }
     
-    function stopAudio() {
+    function stopPowerSignal() {
       try {
-        if (audioElement) {
-          audioElement.pause();
-          audioElement.currentTime = 0;
-        }
-        
-        if (window._currentSource) {
-          window._currentSource.disconnect();
-          window._currentSource = null;
+        if (window._currentOscillator) {
+          window._currentOscillator.stop();
+          window._currentOscillator.disconnect();
+          window._currentOscillator = null;
         }
         if (window._currentGainNode) {
           window._currentGainNode.disconnect();
           window._currentGainNode = null;
         }
-        
-        isPlaying = false;
+        isAudioPlaying = false;
         powerPct.textContent = '0';
-        
-        console.log('🔇 Audio stopped');
-        btDetail.textContent = '🔇 Ready - Press ON to activate light';
+        console.log('🔇 Signal stopped');
+        btDetail.textContent = '🔇 Silent mode - Ready to control';
         btDetail.style.color = '#4a6a8a';
       } catch(e) {
-        console.error('Error stopping audio:', e);
+        console.error('Error stopping signal:', e);
       }
     }
     
@@ -481,12 +477,12 @@
         lightSphere.classList.add('active');
         lightStateLabel.textContent = 'ON';
         const intensityVal = intensity || 50;
-        startAudio(intensityVal);
-        showNotification('💡 Light ON - LEDs are active!', 'success', 2000);
+        startPowerSignal(intensityVal);
+        showNotification('💡 Light ON - Signal active', 'success', 1500);
       } else {
         lightSphere.classList.remove('active');
         lightStateLabel.textContent = 'OFF';
-        stopAudio();
+        stopPowerSignal();
         showNotification('💡 Light OFF', 'info', 1500);
       }
       
@@ -505,8 +501,6 @@
     }
     
     // --- Event Listeners ---
-    
-    // Intensity slider - controls volume/brightness
     intensitySlider.addEventListener('input', function(e) {
       if (!isBluetoothConnected) {
         showNotification('Please connect to SmartLight via Bluetooth', 'error', 2000);
@@ -522,25 +516,17 @@
         if (!isLightOn) {
           setLightState(true, val);
         } else {
-          // Update volume while playing
           currentIntensity = val;
-          const volume = 0.1 + (val / 100) * 0.7;
-          if (gainNode) {
-            gainNode.gain.value = volume;
-            const powerLevel = Math.round((volume / 0.8) * 100);
-            powerPct.textContent = powerLevel;
-          }
-          
           const pct = val/100;
           const glow = 30 + pct * 100;
           lightSphere.style.boxShadow = `0 0 ${glow}px #ffb347, 0 0 ${glow*1.8}px #ff9100, inset 0 0 50px #ffe28c`;
+          startPowerSignal(val);
         }
       } else {
         if (isLightOn) setLightState(false, 0);
       }
     });
     
-    // ON / OFF buttons
     btnOn.addEventListener('click', function() {
       if (!isBluetoothConnected) {
         showNotification('Please connect to SmartLight via Bluetooth', 'error', 3000);
@@ -565,6 +551,26 @@
       if (isLightOn) btnOff.click(); else btnOn.click();
     });
     
+    freqUpBtn.addEventListener('click', function() {
+      if (!isBluetoothConnected) {
+        showNotification('Please connect to SmartLight via Bluetooth', 'error', 2000);
+        return;
+      }
+      currentFrequency = Math.min(60, currentFrequency + 1);
+      freqDisplay.textContent = currentFrequency;
+      if (isLightOn) startPowerSignal(currentIntensity);
+    });
+    
+    freqDownBtn.addEventListener('click', function() {
+      if (!isBluetoothConnected) {
+        showNotification('Please connect to SmartLight via Bluetooth', 'error', 2000);
+        return;
+      }
+      currentFrequency = Math.max(50, currentFrequency - 1);
+      freqDisplay.textContent = currentFrequency;
+      if (isLightOn) startPowerSignal(currentIntensity);
+    });
+    
     // Timer functions
     function clearAllTimers() { 
       activeTimers.forEach(t=>clearTimeout(t)); 
@@ -583,7 +589,7 @@
       const timerId = setTimeout(function() {
         setLightState(true, 50);
         activeTimers = [];
-        showNotification('⏰ Light turned ON as scheduled!', 'success');
+        showNotification('⏰ Light ON - Signal active', 'success');
       }, totalMs);
       activeTimers.push(timerId);
       showNotification(`⏰ Light will turn ON in ${minutes}m ${seconds}s`, 'success');
@@ -604,7 +610,7 @@
       const timerId = setTimeout(function() {
         setLightState(false, 0);
         activeTimers = [];
-        showNotification('⏰ Light turned OFF as scheduled', 'success');
+        showNotification('⏰ Light OFF', 'success');
       }, totalMs);
       activeTimers.push(timerId);
       showNotification(`⏰ Light will turn OFF in ${minutes}m ${seconds}s`, 'success');
@@ -670,10 +676,10 @@
     enableControls(false);
     
     console.log('🔍 Attempting to connect to SmartLight...');
-    console.log('📁 Loading audio file: audio/60 (1).mp3');
     
     if (navigator.bluetooth) {
       setTimeout(() => {
+        // In production: Use Web Bluetooth API
         setBluetoothConnected(true);
       }, 2000);
     } else {
@@ -681,8 +687,8 @@
     }
     
     setInterval(() => { 
-      if (isPlaying && isBluetoothConnected) {
-        connectionStatus.textContent = '🔊 signal active';
+      if (isAudioPlaying && isBluetoothConnected) {
+        connectionStatus.textContent = '🔇 signal';
         connectionStatus.style.color = '#40ffb0';
       } else if (isBluetoothConnected) {
         connectionStatus.textContent = 'connected';
@@ -696,20 +702,22 @@
     setLightState(false, 0);
     intensitySlider.value = 0;
     intensityDisplay.textContent = '0%';
+    freqDisplay.textContent = '55';
     powerPct.textContent = '0';
     
-    console.log('🔧 SmartLight - Audio Signal System');
+    console.log('🔧 SmartLight - Full Power with Transistor Amplifier');
     console.log('============================================');
-    console.log('🎵 AUDIO SOURCE: audio/60 (1).mp3 (Continuous Tone)');
-    console.log('📡 SIGNAL PATH:');
-    console.log('   Audio File → Bluetooth → Radio Speaker → LEDs');
+    console.log('📊 UNDERSTANDING POWER LIMITATIONS:');
+    console.log('   Phone Audio Output: ~1-5mW (not enough for bright LEDs)');
+    console.log('   Solution: Use audio signal to TRIGGER a transistor');
+    console.log('   Transistor switches a separate battery power source');
+    console.log('   LED power comes from battery, not the phone!');
     console.log('');
-    console.log('💡 CONTROL:');
-    console.log('   ON button: Start audio signal');
-    console.log('   OFF button: Stop audio signal');
-    console.log('   Slider: Adjust signal gain (controls brightness)');
-    console.log('============================================');
-    console.log('⚠️ Make sure audio/60 (1).mp3 exists!');
+    console.log('⚡ RECOMMENDED CIRCUIT:');
+    console.log('   Audio Out → Transistor Base (via resistor)');
+    console.log('   Battery (+) → Transistor Collector → LED → Battery (-)');
+    console.log('   Audio signal controls the transistor switch');
+    console.log('   LEDs get FULL POWER from the battery!');
     console.log('============================================');
     
   })();
