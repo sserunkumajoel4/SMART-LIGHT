@@ -1,10 +1,9 @@
-// Service Worker for Mutanda Traders Admin
-const CACHE_NAME = 'smartlight-v2.0.29';
+// Service Worker for SmartLight - v2.1
+const CACHE_NAME = 'smartlight-v2.1.0';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  './audio/60%20(1).mp3',
   './icons/ICON%2072.png',
   './icons/ICON%2096.png',
   './icons/ICON%20128.png',
@@ -15,59 +14,78 @@ const urlsToCache = [
   './icons/ICON%20512.png'
 ];
 
-// Install event
+// Install event - force update
 self.addEventListener('install', event => {
+  console.log('📦 Service Worker v2.1 installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Caching files...');
+        console.log('📦 Caching files...');
         return cache.addAll(urlsToCache);
+      })
+      .then(() => {
+        console.log('✅ New Service Worker installed');
+        return self.skipWaiting();
       })
   );
 });
 
-// Activate event
+// Activate event - clear old caches immediately
 self.addEventListener('activate', event => {
+  console.log('🚀 Service Worker v2.1 activating...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
-      return Promise.all(cacheNames
-        .filter(cacheName => cacheName !== CACHE_NAME)
-        .map(cacheName => {
-          console.log('Deleting old cache:', cacheName);
-          return caches.delete(cacheName);
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('🗑️ Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
         })
       );
-    }).then(() => {
-      console.log('Service worker activated');
+    })
+    .then(() => {
+      console.log('✅ Old caches cleared');
       return self.clients.claim();
     })
   );
 });
 
-// Fetch event
+// Fetch event - network first, then cache
 self.addEventListener('fetch', event => {
-  // For navigation requests (the HTML page), use a network-first strategy.
+  // For navigation requests (HTML page), use network-first
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          // If the fetch is successful, cache the new response.
-          return caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, response.clone());
-            return response;
+          // Clone the response and update cache
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseClone);
           });
+          return response;
         })
         .catch(() => {
-          // If the network fails, serve the cached page.
           return caches.match(event.request);
         })
     );
   } else {
-    // For all other requests (CSS, images, audio), use a cache-first strategy.
+    // For all other requests, use cache-first then network
     event.respondWith(
-      caches.match(event.request).then(response => {
-        return response || fetch(event.request);
-      })
+      caches.match(event.request)
+        .then(response => {
+          if (response) {
+            return response;
+          }
+          return fetch(event.request).then(response => {
+            // Cache the fetched response
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseClone);
+            });
+            return response;
+          });
+        })
     );
   }
 });
@@ -114,9 +132,4 @@ self.addEventListener('message', event => {
   }
 });
 
-// Message handling
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-});show old channgees instead of the new ones
+console.log('📱 SmartLight Service Worker v2.1 registered');
