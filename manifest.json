@@ -2,7 +2,7 @@
   "name": "SmartLight · AI Core",
   "short_name": "SmartLight",
   "description": "Smart light control application with AI core.",
-  "start_url": "./",
+  "start_url": "./?v=2.1.0",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
