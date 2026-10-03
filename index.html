@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0e17" />
+  <meta name="description" content="SMART LIGHT TECHNOLOGY — Intelligent Lighting System. Built by Sserunkuma Joel · SERUSOFT TECHNOLOGIES." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Smart Light" />
+  <meta name="mobile-web-app-capable" content="yes" />
+
+  <title>SMART LIGHT TECHNOLOGY</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png.png" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+  <!-- =====================================================================
+       SPLASH SCREEN
+       ===================================================================== -->
+  <div id="splash" class="splash">
+    <div class="splash-inner">
+      <img src="assets/logo.png" alt="SERUSOFT" class="splash-logo" />
+      <h1 class="splash-title">SMART LIGHT</h1>
+      <h2 class="splash-title-2">TECHNOLOGY</h2>
+      <p class="splash-sub">Intelligent Lighting System</p>
+
+      <div class="splash-divider"></div>
+
+      <p class="splash-credit">Built by <strong>SSERUNKUMA JOEL</strong></p>
+      <p class="splash-org">SERUSOFT TECHNOLOGIES</p>
+
+      <div class="splash-loader">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =====================================================================
+       APP SHELL
+       ===================================================================== -->
+  <div id="app" class="app hidden">
+
+    <!-- ---------- HEADER ---------- -->
+    <header class="app-header">
+      <div class="app-header-left">
+        <div class="app-header-dot" id="headerDot"></div>
+        <div class="app-header-text">
+          <span class="app-header-title">SMART LIGHT</span>
+          <span class="app-header-status" id="headerStatus">Searching for Smart Light...</span>
+        </div>
+      </div>
+      <div class="app-header-right">
+        <span class="app-header-batt" id="headerBattery">--.- V</span>
+      </div>
+    </header>
+
+
+    <!-- ---------- SCREENS ---------- -->
+    <main class="app-main">
+      <aside class="pwa-install" id="pwaInstallNotice" aria-live="polite" hidden>
+        <div class="pwa-install-copy">
+          <strong>Install Smart Light</strong>
+          <p id="pwaInstallMessage">Add the app to your device for quick access.</p>
+        </div>
+        <button class="pwa-install-action" id="pwaInstallAction" type="button" hidden>Install</button>
+        <button class="pwa-install-dismiss" id="pwaInstallDismiss" type="button" aria-label="Dismiss install message">×</button>
+      </aside>
+
+      <!-- ============ HOME ============ -->
+      <section id="screen-home" class="screen active">
+        <h2 class="screen-heading">Your Lights</h2>
+
+        <!-- LIGHT 1 -->
+        <div class="light-card" id="card-light1">
+          <div class="light-card-top">
+            <div class="light-card-name">
+              <span class="light-icon" id="icon-light1">💡</span>
+              <h3>LIGHT 1</h3>
+            </div>
+            <button class="rocker-switch" id="power-light1" data-light="1" aria-label="Light 1 power" aria-pressed="false">
+              <span class="rocker-face" aria-hidden="true">
+                <span class="rocker-upper">I</span>
+                <span class="rocker-lower">O</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="light-card-state">
+            <span class="state-dot" id="dot-light1"></span>
+            <span class="state-text" id="state-light1">OFF</span>
+          </div>
+
+          <div class="light-card-brightness">
+            <div class="brightness-label">
+              <span>Brightness</span>
+              <span class="brightness-value" id="bright-light1">70%</span>
+            </div>
+            <input
+              type="range"
+              min="0" max="100" step="1" value="70"
+              class="brightness-slider"
+              id="slider-light1"
+              data-light="1"
+            />
+          </div>
+        </div>
+
+        <!-- LIGHT 2 -->
+        <div class="light-card" id="card-light2">
+          <div class="light-card-top">
+            <div class="light-card-name">
+              <span class="light-icon" id="icon-light2">💡</span>
+              <h3>LIGHT 2</h3>
+            </div>
+            <button class="rocker-switch" id="power-light2" data-light="2" aria-label="Light 2 power" aria-pressed="false">
+              <span class="rocker-face" aria-hidden="true">
+                <span class="rocker-upper">I</span>
+                <span class="rocker-lower">O</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="light-card-state">
+            <span class="state-dot" id="dot-light2"></span>
+            <span class="state-text" id="state-light2">OFF</span>
+          </div>
+
+          <div class="light-card-brightness">
+            <div class="brightness-label">
+              <span>Brightness</span>
+              <span class="brightness-value" id="bright-light2">40%</span>
+            </div>
+            <input
+              type="range"
+              min="0" max="100" step="1" value="40"
+              class="brightness-slider"
+              id="slider-light2"
+              data-light="2"
+            />
+          </div>
+        </div>
+
+        <!-- BATTERY CARD -->
+        <div class="battery-card">
+          <div class="battery-left">
+            <span class="battery-icon">🔋</span>
+            <span class="battery-label">Battery</span>
+          </div>
+          <div class="battery-right">
+            <span class="battery-value" id="batteryValue">--.- V</span>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ============ SCHEDULE ============ -->
+      <section id="screen-schedule" class="screen">
+        <div class="screen-heading-row">
+          <h2 class="screen-heading">Schedules</h2>
+          <button class="btn-add" id="btnAddSchedule">+ Add</button>
+        </div>
+
+        <div id="scheduleList" class="schedule-list">
+          <div class="empty-state" id="scheduleEmpty">
+            <p>No schedules yet.</p>
+            <p class="empty-hint">Tap <strong>+ Add</strong> to create one.</p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ============ DEVICE ============ -->
+      <section id="screen-device" class="screen">
+        <h2 class="screen-heading">Device</h2>
+
+        <div class="info-card">
+          <div class="info-row">
+            <span class="info-label">Device Name</span>
+            <span class="info-value" id="devName">SERUSOFT SMART LIGHT</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Status</span>
+            <span class="info-value" id="devStatus">Searching…</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Firmware</span>
+            <span class="info-value" id="devFw">v1.0.0</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Battery</span>
+            <span class="info-value" id="devBatt">--.- V</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">System Time</span>
+            <span class="info-value" id="devTime">--:--</span>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="btnSyncTime">Synchronize Time</button>
+        <button class="btn-secondary" id="btnReconnect">Reconnect</button>
+      </section>
+
+
+      <!-- ============ ABOUT ============ -->
+      <section id="screen-about" class="screen">
+        <h2 class="screen-heading">About</h2>
+
+        <!-- ---- About Smart Light ---- -->
+        <div class="about-block">
+          <h3 class="about-title">SMART LIGHT TECHNOLOGY</h3>
+          <p class="about-text">
+            Smart Light Technology is an intelligent lighting prototype developed to
+            demonstrate the integration of software, embedded electronics and
+            automated control into a practical lighting system.
+          </p>
+          <p class="about-text">
+            The system allows users to control two independent lights, manage
+            brightness where supported, create lighting schedules and monitor
+            system information from a smartphone.
+          </p>
+        </div>
+
+        <!-- ---- About Developer (SLIDING) ---- -->
+        <div class="about-block about-dev" id="devBlock">
+          <button class="about-dev-header" id="devToggle" aria-expanded="false">
+            <span>About the Developer</span>
+            <span class="about-chevron" id="devChevron">▾</span>
+          </button>
+
+          <div class="about-dev-body" id="devBody">
+            <div class="dev-photo-wrap">
+              <div class="dev-photo-track" id="devPhotoTrack">
+                <img src="assets/Joel.png" alt="Sserunkuma Joel presenting the Smart Light prototype" class="dev-photo" loading="lazy" />
+                <img src="assets/joel2.png" alt="Sserunkuma Joel working at SERUSOFT" class="dev-photo" loading="lazy" />
+              </div>
+            </div>
+            <h3 class="dev-name">SSERUNKUMA JOEL</h3>
+            <p class="dev-role">Technology Enthusiast • Researcher • Inventor</p>
+            <p class="dev-org">Founder / Owner — SERUSOFT TECHNOLOGIES</p>
+
+            <p class="about-text">
+              Sserunkuma Joel is a technology enthusiast, researcher and inventor
+              passionate about transforming ideas into practical technology
+              solutions. His interests include software development, embedded
+              systems, artificial intelligence, electronics and innovative
+              digital products.
+            </p>
+            <p class="about-text">
+              Through SERUSOFT TECHNOLOGIES, he develops and explores technology
+              projects that combine software, hardware and intelligent systems
+              to address practical needs.
+            </p>
+            <p class="about-text">
+              Smart Light Technology is one of his projects, demonstrating his
+              interest in combining embedded electronics and software to create
+              intelligent, user-friendly systems.
+            </p>
+          </div>
+        </div>
+
+        <!-- ---- About SERUSOFT ---- -->
+        <div class="about-block about-org">
+          <img src="assets/logo.png" alt="SERUSOFT" class="about-logo" />
+          <h3 class="about-title">SERUSOFT TECHNOLOGIES</h3>
+          <p class="about-text">
+            SERUSOFT TECHNOLOGIES is a technology initiative focused on software
+            development, digital solutions, embedded systems, artificial
+            intelligence and innovative technology projects.
+          </p>
+        </div>
+
+        <p class="about-footer">Intelligent Lighting. Simplified.</p>
+      </section>
+
+    </main>
+
+
+    <!-- ---------- BOTTOM NAVIGATION ---------- -->
+    <nav class="app-nav">
+      <button class="nav-btn active" data-screen="home">
+        <span class="nav-icon">⌂</span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-btn" data-screen="schedule">
+        <span class="nav-icon">⏱</span>
+        <span class="nav-label">Schedule</span>
+      </button>
+      <button class="nav-btn" data-screen="device">
+        <span class="nav-icon">⚙</span>
+        <span class="nav-label">Device</span>
+      </button>
+      <button class="nav-btn" data-screen="about">
+        <span class="nav-icon">ⓘ</span>
+        <span class="nav-label">About</span>
+      </button>
+    </nav>
+
+  </div>
+
+
+  <!-- =====================================================================
+       ADD / EDIT SCHEDULE — MODAL
+       ===================================================================== -->
+  <div id="scheduleModal" class="modal hidden">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add Schedule</h3>
+        <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <label class="field-label">Select Light</label>
+        <div class="segmented" id="segLight">
+          <button class="seg-btn active" data-light="1">Light 1</button>
+          <button class="seg-btn" data-light="2">Light 2</button>
+        </div>
+
+        <label class="field-label">ON Time</label>
+        <input type="time" class="field-input" id="inOnTime" value="18:30" />
+
+        <label class="field-label">OFF Time</label>
+        <input type="time" class="field-input" id="inOffTime" value="05:30" />
+
+        <label class="field-label">
+          Brightness <span class="field-value" id="modalBrightVal">70%</span>
+        </label>
+        <input
+          type="range" min="0" max="100" step="1" value="70"
+          class="brightness-slider" id="inBrightness"
+        />
+
+        <label class="field-label">Repeat</label>
+        <div class="days-grid">
+          <label class="day-chip"><input type="checkbox" value="1" checked /><span>Mon</span></label>
+          <label class="day-chip"><input type="checkbox" value="2" checked /><span>Tue</span></label>
+          <label class="day-chip"><input type="checkbox" value="3" checked /><span>Wed</span></label>
+          <label class="day-chip"><input type="checkbox" value="4" checked /><span>Thu</span></label>
+          <label class="day-chip"><input type="checkbox" value="5" checked /><span>Fri</span></label>
+          <label class="day-chip"><input type="checkbox" value="6" checked /><span>Sat</span></label>
+          <label class="day-chip"><input type="checkbox" value="7" checked /><span>Sun</span></label>
+        </div>
+
+        <label class="field-label toggle-field">
+          <span>Enabled</span>
+          <input type="checkbox" id="inEnabled" checked class="switch" />
+        </label>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modalCancel">Cancel</button>
+        <button class="btn-primary" id="modalSave">SAVE SCHEDULE</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =====================================================================
+       TOAST
+       ===================================================================== -->
+  <div id="toast" class="toast hidden"></div>
+
+
+  <!-- =====================================================================
+       SCRIPT
+       ===================================================================== -->
+  <script defer src="js/app.js"></script>
+
+</body>
+</html>
